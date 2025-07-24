@@ -16,3 +16,5 @@ function detail_medCare($dbh,$hos_cd){
 return $data;
 }
 
+// こんにちは
+
