@@ -1,5 +1,6 @@
 <?php
 // 主に、「medcare」テーブルについての修正を記述する
+<<<<<<< HEAD
 
 // function.php
 function detail_medCare($dbh,$hos_cd){
@@ -92,3 +93,5 @@ if(!empty($medCare_data)){ //もしデータがあれば
 
 
 
+=======
+>>>>>>> 12e63de (20250723：コメント追加)
