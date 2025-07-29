@@ -15,7 +15,7 @@ function detail_medCare($dbh,$hos_cd){
     return $data;
 }
 
-// ↓ Medical_control.php ↓ -----------------------------------------------
+// ↓ Medical_control.phpについて ↓ -----------------------------------------------
 // 診療科マスタから動的にデータを取得する関数（GROUP BY使用版）
 function getMedicalDepartments($dbh) {
     $med_depts = array();
@@ -94,7 +94,7 @@ function getFallbackMedicalDepartments() {
         )
     );
 }
-// ↑ Medical_control.php ↑ -----------------------------------------------
+// ↑ Medical_control.phpについて ↑ -----------------------------------------------
 
 
 
