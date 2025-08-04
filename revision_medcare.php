@@ -1,7 +1,16 @@
 <?php
-// 主に、「medcare」テーブルについての修正を記述する
+/***
 
-// function.php -------------------------------------------------------
+    修正すべきファイル一覧
+    - functions.php
+    - Medical_control.php
+    - Medical_view.php
+    - office_Medical_view.php
+    - user_Medical_view.php
+
+***/
+
+// functions.php -------------------------------------------------------
 function detail_medCare($dbh,$hos_cd){
 // 
     $sql = "SELECT hos_cd,value,med_note,delete_flg FROM medcare WHERE delete_flg=0 AND hos_cd=:hos_cd;";

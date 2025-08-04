@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デュアルページビューア</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ヘッダー */
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        /* コントロールパネル */
+        .control-panel {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .url-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .url-group label {
+            font-weight: bold;
+            min-width: 80px;
+        }
+
+        .url-input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 300px;
+            font-size: 14px;
+        }
+
+        .load-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+        .load-btn:hover {
+            background: #2980b9;
+        }
+
+        .layout-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .layout-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s ease;
+        }
+
+        .layout-btn:hover {
+            background: #219a52;
+        }
+
+        .layout-btn.active {
+            background: #e74c3c;
+        }
+
+        /* メインコンテンツエリア */
+        .main-content {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        /* 横並びレイアウト */
+        .main-content.horizontal {
+            flex-direction: row;
+        }
+
+        /* 縦並びレイアウト */
+        .main-content.vertical {
+            flex-direction: column;
+        }
+
+        /* フレームコンテナ */
+        .frame-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        .frame-header {
+            background: #34495e;
+            color: white;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .frame-title {
+            font-weight: bold;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .frame-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .frame-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            transition: background-color 0.2s ease;
+        }
+
+        .frame-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .iframe-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        /* エラー表示 */
+        .error-message {
+            padding: 20px;
+            text-align: center;
+            color: #e74c3c;
+            background: #fdf2f2;
+            border: 1px solid #e74c3c;
+            border-radius: 4px;
+            margin: 20px;
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .control-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .url-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .url-input {
+                width: 100%;
+            }
+
+            .main-content {
+                flex-direction: column !important;
+            }
+
+            .layout-controls {
+                display: none;
+            }
+        }
+
+        /* プリセットボタン */
+        .preset-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s ease;
+        }
+
+        .preset-btn:hover {
+            background: #8e44ad;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>デュアルページビューア</h1>
+        <div class="control-panel">
+            <div class="url-group">
+                <label for="url1">ページ1:</label>
+                <input type="url" id="url1" class="url-input" placeholder="https://example.com" value="template_editor.html">
+                <button class="load-btn" onclick="loadPage(1)">読み込み</button>
+            </div>
+            
+            <div class="url-group">
+                <label for="url2">ページ2:</label>
+                <input type="url" id="url2" class="url-input" placeholder="https://example.com" value="template_editor_simple.html">
+                <button class="load-btn" onclick="loadPage(2)">読み込み</button>
+            </div>
+            
+            <div class="layout-controls">
+                <label>レイアウト:</label>
+                <button class="layout-btn active" onclick="setLayout('horizontal')">横並び</button>
+                <button class="layout-btn" onclick="setLayout('vertical')">縦並び</button>
+            </div>
+            
+            <div class="preset-controls">
+                <label>プリセット:</label>
+                <button class="preset-btn" onclick="loadPreset('test')">テストページ</button>
+                <button class="preset-btn" onclick="loadPreset('local')">ローカルファイル</button>
+                <button class="preset-btn" onclick="loadPreset('google')">Google & Yahoo</button>
+                <button class="preset-btn" onclick="loadPreset('news')">ニュースサイト</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content horizontal" id="mainContent">
+        <!-- 左側/上側のフレーム -->
+        <div class="frame-container">
+            <div class="frame-header">
+                <div class="frame-title" id="title1">ページ1</div>
+                <div class="frame-controls">
+                    <button class="frame-btn" onclick="refreshPage(1)" title="更新">🔄</button>
+                    <button class="frame-btn" onclick="openInNewTab(1)" title="新しいタブで開く">↗</button>
+                </div>
+            </div>
+            <div class="iframe-wrapper">
+                <iframe id="iframe1" class="page-iframe" src="about:blank"></iframe>
+                <div class="loading-overlay" id="loading1">読み込み中...</div>
+            </div>
+        </div>
+
+        <!-- 右側/下側のフレーム -->
+        <div class="frame-container">
+            <div class="frame-header">
+                <div class="frame-title" id="title2">ページ2</div>
+                <div class="frame-controls">
+                    <button class="frame-btn" onclick="refreshPage(2)" title="更新">🔄</button>
+                    <button class="frame-btn" onclick="openInNewTab(2)" title="新しいタブで開く">↗</button>
+                </div>
+            </div>
+            <div class="iframe-wrapper">
+                <iframe id="iframe2" class="page-iframe" src="about:blank"></iframe>
+                <div class="loading-overlay" id="loading2">読み込み中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 現在読み込まれているURL
+        let currentUrls = ['', ''];
+
+        // ページ読み込み関数
+        function loadPage(frameNumber) {
+            const urlInput = document.getElementById(`url${frameNumber}`);
+            const iframe = document.getElementById(`iframe${frameNumber}`);
+            const loading = document.getElementById(`loading${frameNumber}`);
+            const title = document.getElementById(`title${frameNumber}`);
+            
+            let url = urlInput.value.trim();
+            
+            if (!url) {
+                alert('URLを入力してください');
+                return;
+            }
+            
+            // ローカルファイルの場合の処理
+            if (isLocalFile(url)) {
+                loadLocalFile(url, frameNumber);
+                return;
+            }
+            
+            // プロトコルが指定されていない場合はhttps://を追加
+            if (!url.includes('://')) {
+                url = 'https://' + url;
+            }
+            
+            // ローディング表示
+            loading.classList.remove('hidden');
+            
+            // iframe読み込み
+            iframe.src = url;
+            currentUrls[frameNumber - 1] = url;
+            
+            // タイトル更新
+            const displayUrl = url.length > 40 ? url.substring(0, 40) + '...' : url;
+            title.textContent = `ページ${frameNumber}: ${displayUrl}`;
+            
+            // タイムアウト設定（10秒）
+            const timeoutId = setTimeout(() => {
+                loading.classList.add('hidden');
+                showError(frameNumber, `タイムアウト: ${url}`);
+            }, 10000);
+            
+            // iframe読み込み完了時の処理
+            iframe.onload = function() {
+                clearTimeout(timeoutId);
+                loading.classList.add('hidden');
+                try {
+                    // 同一オリジンの場合のみタイトルを取得
+                    const iframeTitle = iframe.contentDocument?.title;
+                    if (iframeTitle) {
+                        title.textContent = `ページ${frameNumber}: ${iframeTitle}`;
+                    }
+                } catch (e) {
+                    // クロスオリジンの場合は無視
+                    console.log('Cross-origin content loaded successfully');
+                }
+            };
+            
+            // エラー処理
+            iframe.onerror = function() {
+                clearTimeout(timeoutId);
+                loading.classList.add('hidden');
+                showError(frameNumber, `読み込み失敗: ${url}`);
+            };
+        }
+        
+        // ローカルファイル判定
+        function isLocalFile(url) {
+            return url.endsWith('.html') || url.endsWith('.htm') || 
+                   (!url.includes('://') && !url.includes('.'));
+        }
+        
+        // ローカルファイル読み込み
+        async function loadLocalFile(filename, frameNumber) {
+            const iframe = document.getElementById(`iframe${frameNumber}`);
+            const loading = document.getElementById(`loading${frameNumber}`);
+            const title = document.getElementById(`title${frameNumber}`);
+            
+            loading.classList.remove('hidden');
+            
+            try {
+                // fetch APIを使用してローカルファイルを読み込み
+                const response = await fetch(filename);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const content = await response.text();
+                
+                // Base64エンコードしてデータURLとして設定
+                const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(content);
+                iframe.src = dataUrl;
+                
+                currentUrls[frameNumber - 1] = filename;
+                title.textContent = `ページ${frameNumber}: ${filename}`;
+                
+                // 読み込み完了後の処理
+                iframe.onload = function() {
+                    loading.classList.add('hidden');
+                };
+                
+            } catch (error) {
+                loading.classList.add('hidden');
+                console.error('Local file load error:', error);
+                showError(frameNumber, `ローカルファイル読み込み失敗: ${filename}\n${error.message}`);
+            }
+        }
+        
+        // エラー表示関数
+        function showError(frameNumber, message) {
+            const iframe = document.getElementById(`iframe${frameNumber}`);
+            const errorHtml = `
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>エラー</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            padding: 40px; 
+                            background: #f8f9fa; 
+                            color: #333;
+                        }
+                        .error-container { 
+                            background: white; 
+                            padding: 30px; 
+                            border-radius: 8px; 
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                            text-align: center;
+                        }
+                        .error-icon { 
+                            font-size: 48px; 
+                            color: #e74c3c; 
+                            margin-bottom: 20px; 
+                        }
+                        .error-title { 
+                            font-size: 24px; 
+                            color: #e74c3c; 
+                            margin-bottom: 15px; 
+                        }
+                        .error-message { 
+                            font-size: 16px; 
+                            line-height: 1.6; 
+                            color: #666;
+                            white-space: pre-line;
+                        }
+                        .retry-btn {
+                            background: #3498db;
+                            color: white;
+                            border: none;
+                            padding: 10px 20px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            margin-top: 20px;
+                        }
+                        .retry-btn:hover {
+                            background: #2980b9;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="error-container">
+                        <div class="error-icon">⚠️</div>
+                        <div class="error-title">ページの読み込みに失敗しました</div>
+                        <div class="error-message">${message}</div>
+                        <button class="retry-btn" onclick="parent.loadPage(${frameNumber})">再試行</button>
+                    </div>
+                </body>
+                </html>
+            `;
+            iframe.srcdoc = errorHtml;
+        }
+
+        // レイアウト変更
+        function setLayout(layout) {
+            const mainContent = document.getElementById('mainContent');
+            const buttons = document.querySelectorAll('.layout-btn');
+            
+            // ボタンのアクティブ状態を更新
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // レイアウトクラスを更新
+            mainContent.className = `main-content ${layout}`;
+        }
+
+        // ページ更新
+        function refreshPage(frameNumber) {
+            const iframe = document.getElementById(`iframe${frameNumber}`);
+            const loading = document.getElementById(`loading${frameNumber}`);
+            
+            loading.classList.remove('hidden');
+            iframe.src = iframe.src; // 強制リロード
+        }
+
+        // 新しいタブで開く
+        function openInNewTab(frameNumber) {
+            const url = currentUrls[frameNumber - 1];
+            if (url) {
+                window.open(url, '_blank');
+            }
+        }
+
+        // プリセット読み込み
+        function loadPreset(presetName) {
+            const url1Input = document.getElementById('url1');
+            const url2Input = document.getElementById('url2');
+            
+            switch (presetName) {
+                case 'local':
+                    url1Input.value = 'template_editor.html';
+                    url2Input.value = 'template_editor_simple.html';
+                    break;
+                case 'google':
+                    url1Input.value = 'https://www.google.com';
+                    url2Input.value = 'https://www.yahoo.co.jp';
+                    break;
+                case 'news':
+                    url1Input.value = 'https://www.nhk.or.jp/news/';
+                    url2Input.value = 'https://www.asahi.com/';
+                    break;
+                case 'github':
+                    url1Input.value = 'https://github.com';
+                    url2Input.value = 'https://stackoverflow.com';
+                    break;
+                case 'test':
+                    // テスト用のシンプルなHTMLページ
+                    const testPage1 = `
+                        <html>
+                        <head><title>テストページ1</title></head>
+                        <body style="padding: 40px; font-family: Arial, sans-serif; background: #e3f2fd;">
+                            <h1 style="color: #1976d2;">テストページ1</h1>
+                            <p>これはテスト用のページです。</p>
+                            <p>現在時刻: ${new Date().toLocaleString()}</p>
+                            <div style="background: white; padding: 20px; margin: 20px 0; border-radius: 8px;">
+                                <h3>サンプルコンテンツ</h3>
+                                <ul>
+                                    <li>項目1</li>
+                                    <li>項目2</li>
+                                    <li>項目3</li>
+                                </ul>
+                            </div>
+                        </body>
+                        </html>
+                    `;
+                    
+                    const testPage2 = `
+                        <html>
+                        <head><title>テストページ2</title></head>
+                        <body style="padding: 40px; font-family: Arial, sans-serif; background: #f3e5f5;">
+                            <h1 style="color: #7b1fa2;">テストページ2</h1>
+                            <p>これは2番目のテストページです。</p>
+                            <p>現在時刻: ${new Date().toLocaleString()}</p>
+                            <div style="background: white; padding: 20px; margin: 20px 0; border-radius: 8px;">
+                                <h3>別のサンプルコンテンツ</h3>
+                                <table border="1" style="border-collapse: collapse; width: 100%;">
+                                    <tr><th style="padding: 8px;">列1</th><th style="padding: 8px;">列2</th></tr>
+                                    <tr><td style="padding: 8px;">データA</td><td style="padding: 8px;">データB</td></tr>
+                                    <tr><td style="padding: 8px;">データC</td><td style="padding: 8px;">データD</td></tr>
+                                </table>
+                            </div>
+                        </body>
+                        </html>
+                    `;
+                    
+                    // テストページを直接読み込み
+                    document.getElementById('iframe1').srcdoc = testPage1;
+                    document.getElementById('iframe2').srcdoc = testPage2;
+                    document.getElementById('title1').textContent = 'ページ1: テストページ1';
+                    document.getElementById('title2').textContent = 'ページ2: テストページ2';
+                    url1Input.value = 'テストページ1（内蔵）';
+                    url2Input.value = 'テストページ2（内蔵）';
+                    return; // 通常の読み込み処理をスキップ
+            }
+            
+            // 両方のページを読み込み
+            loadPage(1);
+            loadPage(2);
+        }
+
+        // Enter キーでの読み込み
+        document.getElementById('url1').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadPage(1);
+            }
+        });
+
+        document.getElementById('url2').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadPage(2);
+            }
+        });
+
+        // 初期読み込み
+        window.addEventListener('load', function() {
+            loadPage(1);
+            loadPage(2);
+        });
+
+        // ウィンドウリサイズ時の処理
+        window.addEventListener('resize', function() {
+            // モバイル表示時は強制的に縦並びに
+            if (window.innerWidth <= 768) {
+                document.getElementById('mainContent').className = 'main-content vertical';
+            }
+        });
+    </script>
+</body>
+</html>
