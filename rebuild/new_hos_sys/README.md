@@ -1,36 +1,64 @@
-# PHP Auth Adapter Pack
 
-このパッケージは、セキュリティを考慮した最小構成のユーザ認証機能です。
-ユーザIDとパスワードによるログイン、CSRF対策、レート制限機能を備えています。
 
-## 構成内容
+# フォルダ構成・内容詳細（2025/08時点）
 
-- `public/login.php` : ログイン画面（タブUI付き）
-- `public/dashboard.php` : ログイン後のページ
-- `public/logout.php` : ログアウト処理
-- `lib/csrf.php` : CSRF対策トークン
-- `lib/rate_limit.php` : ログイン試行制限
-- `lib/auth_adapter.php` : 認証アダプタ（既存DBと接続する部分を編集してください）
-- `sql/login_attempts.sql` : ログイン試行制限テーブル
-- `sql/users.sql` : ユーザテーブルとサンプルアカウント
-- `README.md` : このファイル
+## ルート直下
+- `README.md` … パッケージ全体の説明・セットアップ手順・ファイル構成
 
-## セットアップ手順
+## class/
+- `AppCore.php` … DB接続（PDO）、セッション初期化、ユーザー表示名取得、HTMLエスケープなどシステム共通機能を集約
+- `LoginManager.php` … ログイン認証（ID/パスワード照合）、レートリミット（試行回数制限）、認証履歴記録、APIレスポンス生成（JSON返却）
+- `LogOutManager.php` … セッション情報削除・クッキー削除・ログアウト処理
 
-1. `sql/users.sql` と `sql/login_attempts.sql` をMySQLに適用してください。
-2. `lib/auth_adapter.php` の `check_credentials()` を編集し、既存DBに合わせて調整してください。
-3. `public/login.php` にアクセスして動作確認してください。
+## CSS/
+- `AppCore.css` … 全画面共通スタイル（フォント、背景色など）
+- `login.css` … ログイン画面専用スタイル（フォーム枠、タブUI、パネル、アイコン、レスポンシブ対応）
+
+## js/
+- `login/login_auth.js` … ログイン画面用JS。フォーム送信をJSでハンドリングし、API（lib/login.php）にPOST。認証結果に応じて画面遷移・エラー表示。
+
+## lib/
+- `login.php` … JS用APIエンドポイント。POSTでID/パスワードを受け取り、認証・レートリミット・セッション管理を行い、JSONで結果返却。
+
+## public/
+- `login.php` … ログイン画面。タブUI（お知らせ・最近・メンテナンス・その他）、ID/パスワードフォーム、JS連携、CSSでデザイン。
+- `dashboard.php` … ログイン後のユーザー専用ダッシュボード。ログインユーザー名表示、ログアウトリンク。
+- `control/logout.php` … ログアウト処理。セッション削除・リダイレクト。
+
+## sql/
+- `login_attempts.sql` … ログイン試行制限用テーブル。ID・試行日時を記録し、レートリミット判定に利用。
+- `users.sql` … ユーザテーブル（ID・パスワードハッシュ・有効フラグ・最終ログイン日時）。サンプルアカウント（doctor01, nurse01, admin01）を登録済み。
+
+---
+
+### 内容まとめ
+
+- 認証・セッション・レートリミット等は class/ 配下でクラス化
+- 画面UIは public/ 配下、CSS/ でスタイル分離、js/ でJS管理
+- API・コントローラは lib/ 配下
+- DB定義は sql/ 配下
+- README.md で全体の運用・セットアップ手順を記載
+
+---
+
+---
+
+### 内容まとめ
+
+- 認証・セッション・レートリミット等は class/ 配下でクラス化
+- 画面UIは public/ 配下、CSS/ でスタイル分離、js/ でJS管理
+- API・コントローラは lib/ 配下
+- DB定義は sql/ 配下
+- README.md で全体の運用・セットアップ手順を記載
+
+---
 
 ## サンプルユーザ
 
-以下のアカウントがあらかじめ登録されています。パスワードはすべて `password123` です。
+以下のアカウントがあらかじめ登録されている。
+パスワードはすべて `password123` 。
 
 - doctor01
 - nurse01
 - admin01
 
-## 注意点
-
-- 本番環境では必ず **HTTPS** を利用してください。
-- セッションハイジャック対策として `SameSite=Strict` クッキーを推奨します。
-- この仕組みは最小構成です。2FAやパスワードリセット等は必要に応じて追加してください。
