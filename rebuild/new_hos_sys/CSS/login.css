@@ -8,6 +8,7 @@ h1 {
 	font-size: 2.5rem;
 	font-weight: 700;
 	letter-spacing: 0.05em;
+	margin-left: 2.5rem;
 }
 form {
 	padding: 0 2rem 2rem 2rem;
@@ -98,9 +99,9 @@ button:hover {
 
 .tab.active {
 	background: #fff;
-	color: #2196f3;
+	color: #217a3a;
 	font-weight: 700;
-	border-bottom: 3px solid #2196f3;
+	border-bottom: 3px solid #217a3a;
 }
 
 /* タブアイコン */
@@ -113,7 +114,7 @@ button:hover {
 
 /* アクティブタブのアイコン色変更 */
 .tab.active .tab-icon svg {
-	fill: #2196f3;
+	fill: #217a3a;
 }
 
 .panel {

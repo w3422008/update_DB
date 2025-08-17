@@ -1,5 +1,5 @@
 /* AppCore.css - 全画面共通スタイル（フォントなど） */
 body {
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-family: "游ゴシック", "ヒラギノ角ゴ ProN", "メイリオ", "MS Pゴシック", sans-serif ;
   background: #fff;
 }
