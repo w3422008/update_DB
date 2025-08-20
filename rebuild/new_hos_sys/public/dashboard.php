@@ -21,4 +21,5 @@ $display = $app->loadDisplayName($_SESSION['user_id']) ?? $_SESSION['user_id'];
 	<h2>ログイン中: <?php $app->h($display) ?></h2>
 	<p>ここは保護エリアです。</p>
 	<p><a href="./control/logout.php">ログアウト</a></p>
+	<?php include_once "header.php"; ?>
 </body></html>
