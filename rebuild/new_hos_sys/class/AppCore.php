@@ -84,4 +84,5 @@ class AppCore {
     public static function h(?string $s): string {
         return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
+
 }
