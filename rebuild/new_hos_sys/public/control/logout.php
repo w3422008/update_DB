@@ -24,5 +24,5 @@ if (ob_get_level()) {
 }
 
 // ログイン画面へリダイレクト
-header('Location: ../login.php');
+header('Location: ../view/login.php');
 exit;

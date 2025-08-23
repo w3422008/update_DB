@@ -63,26 +63,44 @@ class AppCore {
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
     }
 
-
-    /**
-     * ユーザー表示名の取得（現状はIDのみ返却）
-     * @param string $userId
-     * @return string|null
-     */
-    public function loadDisplayName(string $userId): ?string {
-        $st = $this->pdo->prepare('SELECT user_id FROM users WHERE user_id=?');
-        $st->execute([$userId]);
-        $row = $st->fetch();
-        return $row ? ($row['user_id'] ?? null) : null;
-    }
-
     /**
      * HTMLエスケープ（XSS対策）
      * @param string|null $s
      * @return string
-     */
-    public static function h(?string $s): string {
+    */
+    public static function escape(?string $s): string {
         return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    /**
+     * ユーザーID、ユーザー名、権限の取得
+     * @param string $userId
+     * @return array|null
+     */
+    public function loadUserInfo(string $userId): ?array {
+        $st = $this->pdo->prepare('SELECT user_id, user_name, role FROM users WHERE user_id=?');
+        $st->execute([$userId]);
+        $row = $st->fetch();
+        return $row ? $row : null;
+    }
+
+    /**
+     * 権限毎に出力する表記を変更
+     */
+    public function getRoleLabel($role){
+        switch($role){
+            case 'system_admin':
+                return 'システム管理者';
+            case 'admin':
+                return '管理者';
+            case 'editor':
+                return '一般(事務)';
+            case 'viewer':
+                return '一般';
+            default:
+                return '-';
+        }
+
     }
 
 }

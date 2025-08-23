@@ -41,19 +41,23 @@ CREATE TABLE IF NOT EXISTS `users` (
   `user_id` varchar(50) NOT NULL COMMENT 'ユーザーID',
   `user_name` varchar(50) NOT NULL COMMENT 'ユーザー名',
   `pwd_hash` varchar(255) NOT NULL COMMENT 'パスワード(ハッシュ化済)',
+  `facility` varchar(50) DEFAULT NULL COMMENT '所属施設',
+  `department` varchar(50) DEFAULT NULL COMMENT '所属部署',
+  `role` enum('system_admin','admin','editor','viewer') DEFAULT 'viewer' COMMENT '権限レベル',
   `is_active` tinyint(1) NOT NULL DEFAULT 1 COMMENT '有効フラグ',
-  `last_login_at` datetime DEFAULT NULL COMMENT '最終ログイン日時',
   `created_at` datetime NOT NULL DEFAULT current_timestamp() COMMENT 'アカウント作成日時',
+  `updated_at` datetime DEFAULT NULL COMMENT '更新日時',
+  `last_login_at` datetime DEFAULT NULL COMMENT '最終ログイン日時',
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='ユーザーテーブル';
 
 -- テーブル new_hossysdb.users: ~3 rows (約) のデータをダンプしています
 DELETE FROM `users`;
-INSERT INTO `users` (`id`, `user_id`, `user_name`, `pwd_hash`, `is_active`, `last_login_at`, `created_at`) VALUES
-	(1, 'doctor01', 'ドクター', '$2y$10$QPoxlrkl4rO0Cji13e4TqeSwVUFOv9L9MkYnlyHNDS1rVp.piutkC', 1, '2025-08-17 13:43:49', '2025-08-16 21:22:18'),
-	(2, 'nurse01', 'ナース', '$2y$10$QPoxlrkl4rO0Cji13e4TqeSwVUFOv9L9MkYnlyHNDS1rVp.piutkC', 1, NULL, '2025-08-16 21:22:18'),
-	(3, 'admin01', '管理者', '$2y$10$QPoxlrkl4rO0Cji13e4TqeSwVUFOv9L9MkYnlyHNDS1rVp.piutkC', 1, NULL, '2025-08-16 21:22:18');
+INSERT INTO `users` (`id`, `user_id`, `user_name`, `pwd_hash`, `facility`, `department`, `role`, `is_active`, `created_at`, `updated_at`, `last_login_at`) VALUES
+	(1, 'doctor01', 'ドクター', '$2y$10$QPoxlrkl4rO0Cji13e4TqeSwVUFOv9L9MkYnlyHNDS1rVp.piutkC', NULL, NULL, 'system_admin', 1, '2025-08-16 21:22:18', NULL, '2025-08-23 14:14:04'),
+	(2, 'nurse01', 'ナース', '$2y$10$QPoxlrkl4rO0Cji13e4TqeSwVUFOv9L9MkYnlyHNDS1rVp.piutkC', NULL, NULL, 'editor', 1, '2025-08-16 21:22:18', NULL, NULL),
+	(3, 'admin01', '管理者', '$2y$10$QPoxlrkl4rO0Cji13e4TqeSwVUFOv9L9MkYnlyHNDS1rVp.piutkC', NULL, NULL, 'admin', 1, '2025-08-16 21:22:18', NULL, NULL);
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

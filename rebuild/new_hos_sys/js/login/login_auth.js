@@ -8,6 +8,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // ログインフォーム取得
     const form = document.querySelector('form[action="./login.php"]');
+    console.log('フォーム要素:', form);
     // エラー表示領域取得
     const errDiv = document.querySelector('.err');
 
@@ -18,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const userId = form.user_id.value.trim();
             const password = form.password.value;
             try {
-            const res = await fetch('../lib/login.php', {
+            const res = await fetch('../../lib/login.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: userId, password: password })
@@ -33,7 +34,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             if (data.success) {
-                window.location.href = './dashboard.php';
+                // ログイン後のページへ遷移
+                window.location.href = '../control/menu.php';
             } else {
                 if (errDiv) errDiv.textContent = data.message || 'ログインに失敗しました。';
             }

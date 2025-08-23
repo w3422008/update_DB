@@ -11,7 +11,7 @@ class RedirectManager {
 
     // ログインページへのリダイレクト
     public function redirectToLogin() {
-        header("Location: public/login.php");
+        header("Location: public/view/login.php");
         exit;
     }
 
