@@ -25,82 +25,75 @@
     <?php include_once "header.php"; ?>
     
     <div class="uk-container uk-container-large uk-margin-top">
-        <div class="menu-grid uk-grid-match" uk-grid>
-            <!-- 医療機関　検索 -->
-            <div class="uk-width-1-3@m uk-width-1-2@s">
-                <div class="menu-card" uk-tooltip="title: View summary of key metrics; pos: bottom">
-                    <a href="#dashboard" class="menu-card-link">
-                        <div class="menu-card-icon">
-                            <span uk-icon="icon: search; ratio: 2.5"></span>
+        <div class="menu-grid">
+            <div class="uk-flex uk-flex-center">
+                <div class="uk-width-2-3@m uk-width-1-1@s">
+                    <div class="uk-grid uk-child-width-1-2@m uk-child-width-1-1@s uk-grid-match uk-grid-small" uk-grid>
+                        <!-- 1行目 -->
+                        <div>
+                            <div class="menu-card" uk-tooltip="title: 医療機関が検索できます; pos: bottom">
+                                <a href="#dashboard" class="menu-card-link">
+                                    <div class="menu-card-icon">
+                                        <span uk-icon="icon: search; ratio: 2.5"></span>
+                                    </div>
+                                    <h3 class="menu-card-title">医療機関 検索</h3>
+                                </a>
+                            </div>
                         </div>
-                        <h3 class="menu-card-title">医療機関 検索</h3>
-                        <p class="menu-card-description">View summary of key metrics</p>
-                    </a>
-                </div>
-            </div>
-            
-            <!-- Messages -->
-            <div class="uk-width-1-3@m uk-width-1-2@s">
-                <div class="menu-card" uk-tooltip="title: Check your messages; pos: bottom">
-                    <a href="#messages" class="menu-card-link">
-                        <div class="menu-card-icon">
-                            <span uk-icon="icon: comments; ratio: 2.5"></span>
+                        <div>
+                            <div class="menu-card" uk-tooltip="title: 医療機関の新規登録・削除に加え<br>医療機関を出力できます; pos: bottom">
+                                <a href="#messages" class="menu-card-link">
+                                    <div class="menu-card-icon">
+                                        <span uk-icon="icon: comments; ratio: 2.5"></span>
+                                    </div>
+                                    <h3 class="menu-card-title">医療機関 管理/出力
+                                    </h3>
+                                </a>
+                            </div>
                         </div>
-                        <h3 class="menu-card-title">医療機関 管理</h3>
-                        <p class="menu-card-description">Check your messages</p>
-                    </a>
-                </div>
-            </div>
-            
-            <!-- Users -->
-            <div class="uk-width-1-3@m uk-width-1-2@s">
-                <div class="menu-card" uk-tooltip="title: Manage user accounts; pos: bottom">
-                    <a href="#users" class="menu-card-link">
-                        <div class="menu-card-icon">
-                            <span uk-icon="icon: users; ratio: 2.5"></span>
+                        <!-- 2行目 -->
+                        <div>
+                            <div class="menu-card" uk-tooltip="title: Manage user accounts; pos: bottom">
+                                <a href="#users" class="menu-card-link">
+                                    <div class="menu-card-icon">
+                                        <span uk-icon="icon: pull; ratio: 2.5"></span>
+                                    </div>
+                                    <h3 class="menu-card-title">データインポート</h3>
+                                </a>
+                            </div>
                         </div>
-                        <h3 class="menu-card-title">Users</h3>
-                        <p class="menu-card-description">Manage user accounts</p>
-                    </a>
-                </div>
-            </div>
-            
-            <!-- Reports -->
-            <div class="uk-width-1-3@m uk-width-1-2@s">
-                <div class="menu-card" uk-tooltip="title: View reports and analytics; pos: bottom">
-                    <a href="#reports" class="menu-card-link">
-                        <div class="menu-card-icon">
-                            <span uk-icon="icon: database; ratio: 2.5"></span>
+                        <div>
+                            <div class="menu-card" uk-tooltip="title: ユーザーの管理ができます; pos: bottom">
+                                <a href="#reports" class="menu-card-link">
+                                    <div class="menu-card-icon">
+                                        <span uk-icon="icon: users; ratio: 2.5"></span>
+                                    </div>
+                                    <h3 class="menu-card-title">ユーザ－管理</h3>
+                                </a>
+                            </div>
                         </div>
-                        <h3 class="menu-card-title">Reports</h3>
-                        <p class="menu-card-description">View reports and analytics</p>
-                    </a>
-                </div>
-            </div>
-            
-            <!-- Settings -->
-            <div class="uk-width-1-3@m uk-width-1-2@s">
-                <div class="menu-card" uk-tooltip="title: Adjust your preferences; pos: bottom">
-                    <a href="#settings" class="menu-card-link">
-                        <div class="menu-card-icon">
-                            <span uk-icon="icon: cog; ratio: 2.5"></span>
+                        <!-- 3行目 -->
+                        <div>
+                            <div class="menu-card" uk-tooltip="title: Adjust your preferences; pos: bottom">
+                                <a href="#settings" class="menu-card-link">
+                                    <div class="menu-card-icon">
+                                        <span uk-icon="icon: comments; ratio: 2.5"></span>
+                                    </div>
+                                    <h3 class="menu-card-title">お問い合わせ</h3>
+                                </a>
+                            </div>
                         </div>
-                        <h3 class="menu-card-title">Settings</h3>
-                        <p class="menu-card-description">Adjust your preferences</p>
-                    </a>
-                </div>
-            </div>
-            
-            <!-- Support -->
-            <div class="uk-width-1-3@m uk-width-1-2@s">
-                <div class="menu-card" uk-tooltip="title: Get help and support; pos: bottom">
-                    <a href="#support" class="menu-card-link">
-                        <div class="menu-card-icon">
-                            <span uk-icon="icon: question; ratio: 2.5"></span>
+                        <div>
+                            <div class="menu-card" uk-tooltip="title: システムに関する情報を<br>管理します。; pos: bottom">
+                                <a href="#support" class="menu-card-link">
+                                    <div class="menu-card-icon">
+                                        <span uk-icon="icon: settings; ratio: 2.5"></span>
+                                    </div>
+                                    <h3 class="menu-card-title">システム管理</h3>
+                                </a>
+                            </div>
                         </div>
-                        <h3 class="menu-card-title">Support</h3>
-                        <p class="menu-card-description">Get help and support</p>
-                    </a>
+                    </div>
                 </div>
             </div>
         </div>

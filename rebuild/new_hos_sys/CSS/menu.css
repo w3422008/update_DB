@@ -2,13 +2,13 @@
 
 /* ボディとコンテナの調整 */
 body {
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
 .uk-container {
-    flex: 1;
+    height: calc(100vh - 80px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -30,6 +30,11 @@ body {
     transition: all 0.3s ease;
     height: 100%;
     border: 1px solid #f0f0f0;
+    max-width: 240px;
+    min-height: 110px;
+    margin: 0 auto;
+    padding: 8px 4px;
+    box-sizing: border-box;
 }
 
 .menu-card:hover {
@@ -40,7 +45,7 @@ body {
 /* メニューカードリンク */
 .menu-card-link {
     display: block;
-    padding: 40px 30px;
+    padding: 16px 8px;
     text-decoration: none;
     color: inherit;
     height: 100%;
@@ -54,9 +59,12 @@ body {
 
 /* メニューカードアイコン */
 .menu-card-icon {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     color: #9e9e9e;
     transition: color 0.3s ease;
+}
+.menu-card-icon span {
+    font-size: 1.5rem !important;
 }
 
 .menu-card:hover .menu-card-icon {
@@ -65,10 +73,10 @@ body {
 
 /* メニューカードタイトル */
 .menu-card-title {
-    font-size: 1.5rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #333;
-    margin-bottom: 10px;
+    margin: 6px 0 3px 0;
     transition: color 0.3s ease;
 }
 
@@ -78,7 +86,7 @@ body {
 
 /* メニューカード説明文 */
 .menu-card-description {
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     color: #666;
     line-height: 1.5;
     margin: 0;
@@ -87,39 +95,43 @@ body {
 /* レスポンシブ対応 */
 @media screen and (max-width: 960px) {
     .menu-grid {
-        padding: 30px 15px;
-        max-width: 800px;
+        padding: 20px 10px;
+        max-width: 600px;
     }
-    
+    .menu-card {
+        min-height: 90px;
+        max-width: 95vw;
+        padding: 6px 2px;
+    }
     .menu-card-link {
-        padding: 30px 20px;
+        padding: 10px 4px;
     }
-    
     .menu-card-title {
-        font-size: 1.3rem;
-    }
-    
-    .menu-card-description {
         font-size: 0.9rem;
+    }
+    .menu-card-description {
+        font-size: 0.8rem;
     }
 }
 
 @media screen and (max-width: 640px) {
     .menu-grid {
-        padding: 20px 10px;
-        max-width: 600px;
+        padding: 10px 2px;
+        max-width: 95vw;
     }
-    
+    .menu-card {
+        min-height: 70px;
+        max-width: 95vw;
+        padding: 4px 1px;
+    }
     .menu-card-link {
-        padding: 25px 15px;
+        padding: 6px 2px;
     }
-    
     .menu-card-icon {
-        margin-bottom: 15px;
+        margin-bottom: 6px;
     }
-    
     .menu-card-title {
-        font-size: 1.2rem;
+        font-size: 0.8rem;
     }
 }
 

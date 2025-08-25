@@ -8,7 +8,7 @@ body {
 .uk-navbar-container.bg-navbar1 { 
     background-color: #fff;
     min-height: 70px;
-    margin: 0 2em;
+    margin: 0.5em 2em 0 2em;
 }
 
 .bg-navbar2 {
@@ -125,13 +125,29 @@ body {
 .uk-logo {
     font-size: 2.2rem !important;
     color: #22663f !important;
-    font-weight: 600 !important;
+    font-weight: 500 !important;
     text-decoration: none !important;
 }
 
 .uk-logo:hover {
     color: #4e9c70 !important;
     text-decoration: none !important;
+}
+
+/* パンくずリスト */
+.uk-breadcrumb {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+}
+
+.uk-breadcrumb li {
+    display: inline-block;
+}
+
+.uk-breadcrumb li + li:before {
+    content: " / ";
+    padding: 0 8px;
+    color: #999;
 }
 
 /* レスポンシブ対応 */
