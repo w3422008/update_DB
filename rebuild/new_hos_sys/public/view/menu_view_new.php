@@ -26,14 +26,14 @@
     
     <div class="uk-container uk-container-large uk-margin-top">
         <div class="menu-grid uk-grid-match" uk-grid>
-            <!-- 医療機関　検索 -->
+            <!-- Dashboard -->
             <div class="uk-width-1-3@m uk-width-1-2@s">
                 <div class="menu-card" uk-tooltip="title: View summary of key metrics; pos: bottom">
                     <a href="#dashboard" class="menu-card-link">
                         <div class="menu-card-icon">
-                            <span uk-icon="icon: search; ratio: 2.5"></span>
+                            <span uk-icon="icon: grid; ratio: 2.5"></span>
                         </div>
-                        <h3 class="menu-card-title">医療機関 検索</h3>
+                        <h3 class="menu-card-title">Dashboard</h3>
                         <p class="menu-card-description">View summary of key metrics</p>
                     </a>
                 </div>
@@ -46,7 +46,7 @@
                         <div class="menu-card-icon">
                             <span uk-icon="icon: comments; ratio: 2.5"></span>
                         </div>
-                        <h3 class="menu-card-title">医療機関 管理</h3>
+                        <h3 class="menu-card-title">Messages</h3>
                         <p class="menu-card-description">Check your messages</p>
                     </a>
                 </div>

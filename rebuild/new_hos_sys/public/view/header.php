@@ -1,19 +1,41 @@
-<link rel="stylesheet" href="../CSS/AppCore.css">
-<div class="uk-position-medium uk-position-top-right uk-position-z-index">
-    <!-- Offcanvas -->
-    <a class="uk-navbar-toggle uk-navbar-toggle-animate" href="#" uk-navbar-toggle-icon style="margin:0 0 0 auto;"></a>
-</div>
+<!-- UIkit CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.16.14/dist/css/uikit.min.css" />
+<!-- UIkit JS -->
+<script src="https://cdn.jsdelivr.net/npm/uikit@3.16.14/dist/js/uikit.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/uikit@3.16.14/dist/js/uikit-icons.min.js"></script>
+<!-- カスタムCSS -->
+<link rel="stylesheet" href="../../CSS/AppCore.css">
 
-<div class="uk-navbar-dropdown uk-width-auto" uk-dropdown="mode: click">
-    <ul class="uk-nav uk-navbar-dropdown-nav" uk-margin>
-        <li class="uk-nav-header">
-            <span uk-icon="icon: user"></span>
-        </li>
-        <li id=""><span>ID：<?php echo $app->escape($user_data['user_id']) ?></span></li>
-        <li><span>ユーザー名：<?php echo $app->escape($user_data['user_name']) ?></span></li>
-        <li><span>権限：<?php echo $app->getRoleLabel($user_data['role']) ?></span> でログイン中</li>
-        <li class="uk-nav-divider"></li>
-        <li><a href="#"><span class="uk-margin-small-right" uk-icon="icon: cog"></span> パスワード変更</a></li>
-        <li><a href="#"><span class="uk-margin-small-right" uk-icon="icon: sign-out"></span> ログアウト</a></li>
-    </ul>
-</div>
+<!-- ナビゲーションバー -->
+<nav class="uk-navbar-container bg-navbar1" uk-navbar>
+    <div class="uk-navbar-left">
+        <a class="uk-navbar-item uk-logo" href="../control/menu.php">医療機関情報システム</a>
+    </div>
+    
+    <div class="uk-navbar-right">
+        <!-- ユーザーメニューボタン -->
+        <a class="uk-navbar-toggle" uk-icon="user" uk-toggle="target: #user-menu"></a>
+        
+        <!-- ドロップダウンメニュー -->
+        <div id="user-menu" uk-dropdown="mode: click; pos: bottom-right" class="bg-navbar2">
+            <ul class="uk-nav uk-dropdown-nav">
+                <li class="user-role-badge">
+                    <span class="role-badge"><?php echo $app->getRoleLabel($user_data['role']) ?></span>
+                </li>
+                <li class="user-info-section">
+                    <div class="user-info-lines">
+                        <div class="user-info-line">
+                            <span class="user-id"><?php echo $app->escape($user_data['user_id']) ?></span>
+                        </div>
+                        <div class="user-info-line">
+                            <span class="user-name"><?php echo $app->escape($user_data['user_name']) ?></span>
+                        </div>
+                    </div>
+                </li>
+                <li class="uk-nav-divider"></li>
+                <li><a href="#" class="menu-item"><span uk-icon="cog" class="menu-icon"></span>パスワード変更</a></li>
+                <li><a href="../control/logout.php" class="menu-item"><span uk-icon="sign-out" class="menu-icon"></span>ログアウト</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>

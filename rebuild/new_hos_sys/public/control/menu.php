@@ -1,7 +1,9 @@
 <?php
 
 require_once __DIR__ . '/../../class/AppCore.php';
+require_once __DIR__ . '/../../class/RedirectManager.php';
 $app = new AppCore();
+$redirect = new RedirectManager();
 // ログインしていない場合はログイン画面へ
 if (empty($_SESSION['user_id'])) {
 	header('Location: ../view/login.php');

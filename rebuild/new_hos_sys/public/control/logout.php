@@ -11,10 +11,14 @@
  */
 // システム初期化
 require_once __DIR__ . '/../../class/LogOutManager.php';
+require_once __DIR__ . '/../../class/RedirectManager.php';
+
 /**
  * セッション完全削除処理
  */
 $Logout = new LogOutManager();
+// RedirectManagerのインスタンスを作成
+$redirect = new RedirectManager();
 
 $Logout->destroySession();
 
@@ -24,5 +28,4 @@ if (ob_get_level()) {
 }
 
 // ログイン画面へリダイレクト
-header('Location: ../view/login.php');
-exit;
+$redirect->redirectToLogout();

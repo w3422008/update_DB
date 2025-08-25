@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>システム管理画面 - メンテナンス通知管理</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- ナビゲーションバー -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-tools"></i>
+                <span>システム管理画面</span>
+            </div>
+            <div class="hamburger-menu" id="hamburgerMenu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <ul>
+                    <li><a href="#" data-section="dashboard"><i class="fas fa-home"></i> ダッシュボード</a></li>
+                    <li><a href="#" data-section="maintenance"><i class="fas fa-wrench"></i> メンテナンス通知</a></li>
+                    <li><a href="#" data-section="settings"><i class="fas fa-cog"></i> 設定</a></li>
+                    <li><a href="#" id="logout"><i class="fas fa-sign-out-alt"></i> ログアウト</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- メインコンテンツ -->
+    <main class="main-content">
+        <!-- ダッシュボードセクション -->
+        <section id="dashboard" class="content-section active">
+            <div class="section-header">
+                <h1><i class="fas fa-home"></i> ダッシュボード</h1>
+            </div>
+            <div class="dashboard-cards">
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>アクティブな通知</h3>
+                        <span class="card-number" id="activeNotifications">0</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-archive"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>過去の通知</h3>
+                        <span class="card-number" id="pastNotifications">0</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>表示中の通知</h3>
+                        <span class="card-number" id="visibleNotifications">0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- メンテナンス通知セクション -->
+        <section id="maintenance" class="content-section">
+            <div class="section-header">
+                <h1><i class="fas fa-wrench"></i> メンテナンス通知管理</h1>
+                <button class="btn btn-primary" id="addNotificationBtn">
+                    <i class="fas fa-plus"></i> 新規登録
+                </button>
+            </div>
+            
+            <!-- 通知一覧テーブル -->
+            <div class="table-container">
+                <table class="notifications-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>タイトル</th>
+                            <th>開始日時</th>
+                            <th>終了日時</th>
+                            <th>ステータス</th>
+                            <th>表示状態</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="notificationsTableBody">
+                        <!-- 動的に生成される -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 設定セクション -->
+        <section id="settings" class="content-section">
+            <div class="section-header">
+                <h1><i class="fas fa-cog"></i> 設定</h1>
+            </div>
+            <div class="settings-content">
+                <div class="setting-group">
+                    <h3>表示設定</h3>
+                    <div class="setting-item">
+                        <label for="autoRefresh">自動更新</label>
+                        <input type="checkbox" id="autoRefresh" checked>
+                    </div>
+                    <div class="setting-item">
+                        <label for="refreshInterval">更新間隔（秒）</label>
+                        <input type="number" id="refreshInterval" value="30" min="10" max="300">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- モーダル: 新規通知登録 -->
+    <div id="notificationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">メンテナンス通知登録</h2>
+                <span class="close" id="closeModal">&times;</span>
+            </div>
+            <form id="notificationForm">
+                <div class="form-group">
+                    <label for="notificationTitle">タイトル</label>
+                    <input type="text" id="notificationTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="notificationContent">内容</label>
+                    <textarea id="notificationContent" rows="4" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="startDateTime">開始日時</label>
+                        <input type="datetime-local" id="startDateTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endDateTime">終了日時</label>
+                        <input type="datetime-local" id="endDateTime" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="notificationType">通知タイプ</label>
+                    <select id="notificationType" required>
+                        <option value="">選択してください</option>
+                        <option value="maintenance">定期メンテナンス</option>
+                        <option value="emergency">緊急メンテナンス</option>
+                        <option value="update">システム更新</option>
+                        <option value="other">その他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="isVisible"> 即座に表示する
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelModal">キャンセル</button>
+                    <button type="submit" class="btn btn-primary">登録</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="scripts/main.js"></script>
+</body>
+</html>
