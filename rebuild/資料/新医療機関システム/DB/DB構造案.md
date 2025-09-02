@@ -1,4 +1,4 @@
-# DB案
+****# DB案
 
 ### 1. 医療機関基本情報系
 
@@ -8,8 +8,8 @@
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY | 医療機関コード |
-| hospital_name | varchar(100) | NOT NULL | 医療機関名 |
 | hospital_type_id | int(11) | FOREIGN KEY | 病院区分ID |
+| hospital_name | varchar(100) | NOT NULL | 医療機関名 |
 | status | enum('active','closed') | DEFAULT 'active' | 運営状況 |
 | bed | int(11) | NOT NULL | 許可病床数 |
 | notes | text | NULL | 備考（基本情報） |
@@ -22,7 +22,7 @@
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| type_code | varchar(5) | PRIMARY KEY NOT NULL | 区分コード |
+| type_id | varchar(10) | PRIMARY KEY NOT NULL | 病院区分ID |
 | type_name | varchar(50) | NOT NULL | 区分名 |
 
 #### `addresses` テーブル（住所情報）
@@ -32,10 +32,10 @@
 |-------------|----------|------|------|
 | address_id | int(11) | PRIMARY KEY AUTO_INCREMENT | 住所ID |
 | hospital_id | varchar(10) | FOREIGN KEY | 医療機関コード |
+| area_id | int(11) | FOREIGN KEY | 地区コード（areaテーブル参照） |
 | postal_code | varchar(7) | NULL | 郵便番号 |
 | street_number | varchar(200) | NULL | 番地 |
 | full_address | varchar(400) | NULL | 完全住所 |
-| area_code | int(11) | FOREIGN KEY | 地区コード（areaテーブル参照） |
 
 #### `contact_details` テーブル（連絡先情報）
 医療機関の連絡先情報を管理
@@ -101,7 +101,7 @@
 | department_id | int(11) | PRIMARY KEY AUTO_INCREMENT | 診療科ID |
 | department_code | varchar(10) | UNIQUE NOT NULL | 診療科コード |
 | department_name | varchar(100) | NOT NULL | 診療科名 |
-| category | varchar(100) | FOREIGN KEY | 診療科カテゴリ名 |
+| category | varchar(100) | NOT NULL | 診療科カテゴリ名 |
 
 #### `削除候補``medical_categories` テーブル（診療科カテゴリ）
 診療科の大分類を管理
@@ -142,7 +142,7 @@
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
 | service_id | varchar(20) | PRIMARY KEY(複合主キー) | 診療内容ID |
 | notes | text | NULL | 個別備考 |
-| created_at | timestamp | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
+
 
 ### 6. 地域・エリア系
 
@@ -151,7 +151,7 @@
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| area_code | int(11) | PRIMARY KEY NOT NULL | 地区コード |
+| area_id | int(11) | PRIMARY KEY NOT NULL | 地区コード |
 | secondary_medical_area_name | varchar(50) | NULL | 二次医療圏名 |
 | prefecture | varchar(10) | NULL | 都道府県 |
 | city | varchar(30) | NULL | 市 |
@@ -175,16 +175,25 @@
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | log_id | bigint(20) | PRIMARY KEY AUTO_INCREMENT | ログID |
+| user_id | varchar(10) | FOREIGN KEY NOT NULL | 操作者ID |
 | table_name | varchar(50) | NOT NULL | 対象テーブル名 |
 | record_id | varchar(50) | NOT NULL | 対象レコードID |
 | action_type | enum('INSERT','UPDATE','DELETE') | NOT NULL | 操作種別 |
 | old_values | json | NULL | 変更前データ |
 | new_values | json | NULL | 変更後データ |
-| user_id | varchar(10) | NULL | 操作者ID |
 | is_admin | boolean | DEFAULT false | 管理者フラグ |
 | created_at | timestamp | DEFAULT CURRENT_TIMESTAMP | 操作日時 |
 | ip_address | varchar(45) | NULL | IPアドレス |
 | user_agent | text | NULL | ユーザーエージェント |
+
+#### `login_attempts` テーブル（監査ログ）
+ログインの試行回数を管理
+
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| id | bigint(20) | PRIMARY KEY NOT NULL AUTO_INCREMENT | ログID |
+| key_name | varchar(128) | NOT NULL | ユーザーID |
+| attempted | datetime | NOT NULL | 日時 |
 
 ### 9. システム管理系
 
@@ -195,7 +204,7 @@
 |-------------|----------|------|------|
 | user_id | varchar(8) | PRIMARY KEY | ユーザーID |
 | username | varchar(50) | NOT NULL | ユーザー名 |
-| password_hash | varchar(255) | NOT NULL | パスワードハッシュ |
+| pwd_hash | varchar(255) | NOT NULL | パスワードハッシュ |
 | facility_id | varchar(20) | NULL | 所属施設ID |
 | department_id | varchar(20) | NULL | 所属部署ID |
 | role | enum('admin','editor','viewer') | DEFAULT 'viewer' | 権限レベル |
@@ -210,9 +219,9 @@
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| facility_id | varchar(20) | PRIMARY KEY | 所属施設ID |
+| facility_id | varchar(20) | PRIMARY KEY FOREIGN KEY | 所属施設ID |
 | name | varchar(50) | NOT NULL | 施設名 |
-| fomal_name | varchar(60) | NOT NULL | 正式名称 |
+| formal_name | varchar(60) | NOT NULL | 正式名称 |
 | abbreviation | varchar(50) | NOT NULL | 略称 |
 
 #### `kawasaki_university_department` テーブル（マスタ）
@@ -220,7 +229,7 @@
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| department_id | varchar(20) | PRIMARY KEY | 部署ID |
+| department_id | varchar(20) | PRIMARY KEY FOREIGN KEY | 部署ID |
 | name | varchar(50) | NOT NULL | 部署名 |
 
 ### 10. その他統合テーブル
@@ -229,29 +238,30 @@
 
 | フィールド名 | データ型 | 説明 |
 |-------------|----------|------|
-| hos_cd | varchar(10) | 医療機関コード（複合主キー） |
-| ins | int(11) | 施設区分（複合主キー、0:附属病院, 1:総合医療センター） |
+| hospital_id | varchar(10) | 医療機関コード（複合主キー） |
+| user_id | varchar(8) | ユーザーID（複合主キー、これより附属病院、総合医療センターの情報を取得） |
+| intro_type | enum('intro','invers_intro') | DEFAULT 'intro' | 紹介・逆紹介判定 |
 | year | year(4) | 年度（複合主キー） |
 | date | date | 診療日（複合主キー） |
 | fie_name | varchar(30) | 診療科（複合主キー） |
 | fie_cd | int(11) | 診療科コード |
-| intr | int(11) | 紹介件数 |
+| intr | int(11) | 紹介・逆紹介件数 |
 
 #### `training` テーブル（院外診療支援・研修情報）
 院外診療支援・研修情報を管理
 
 | フィールド名 | データ型 | 説明 |
 |-------------|----------|------|
-| hos_cd | varchar(10) | 医療機関コード（複合主キー） |
+| hospital_id | varchar(10) | 医療機関コード（複合主キー） |
 | year | year(4) | 年度（複合主キー） |
-| ins | int(11) | 施設区分（複合主キー、0:附属病院, 1:総合医療センター） |
-| tra_name | varchar(200) | 研修先医療機関名（複合主キー） |
-| dep | varchar(60) | 診療科（複合主キー） |
+| user_id | varchar(8) | ユーザーID（複合主キー、これより附属病院、総合医療センターの情報を取得） |
+| training_name | varchar(200) | 研修先医療機関名（複合主キー） |
+| department | varchar(60) | 診療科（複合主キー） |
 | name | varchar(60) | 氏名（複合主キー） |
-| start | date | 診療支援開始日（複合主キー） |
-| end | date | 診療支援終了日（複合主キー） |
+| start_date | date | 診療支援開始日（複合主キー） |
+| end_date | date | 診療支援終了日（複合主キー） |
 | date | varchar(300) | 日付 |
-| dia_div | varchar(50) | 診療支援区分 |
+| diagnostic_aid | varchar(50) | 診療支援区分 |
 | occ | varchar(30) | 職名 |
 
 #### `contact` テーブル（コンタクト履歴）
@@ -262,16 +272,16 @@
 | hos_cd | varchar(10) | 医療機関コード（複合主キー） |
 | hos_name | varchar(100) | 医療機関名 |
 | year | year(4) | 年度（複合主キー） |
-| ins | int(11) | 施設区分（0:附属病院, 1:総合医療センター）（複合主キー） |
+| user_id | varchar(8) | ユーザーID（複合主キー、これより附属病院、総合医療センターの情報を取得） |
 | date | date | 日付（複合主キー） |
 | method | varchar(50) | 方法（来院、訪問、オンライン等）（複合主キー） |
-| ex_dept | varchar(50) | 連携機関対応者部署 |
+| ex_department | varchar(50) | 連携機関対応者部署 |
 | ex_position | varchar(50) | 連携機関対応者役職 |
 | ex_name | varchar(10) | 連携機関対応者氏名（複合主キー） |
 | ex_subnames | varchar(100) | 連携機関対応人数・氏名 |
-| in_dept | varchar(50) | 当院対応者所属 |
+| in_department | varchar(50) | 当院対応者所属 |
 | in_name | varchar(10) | 当院対応者氏名（複合主キー） |
 | in_subnames | varchar(100) | 当院対応人数・氏名 |
 | detail | varchar(100) | 内容 |
-| con_note | varchar(100) | 備考 |
-| data_dept | varchar(50) | データ作成部署 |
+| notes | varchar(100) | 備考 |
+| data_department | varchar(50) | データ作成部署 |
