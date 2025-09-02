@@ -21,20 +21,42 @@
       - [`message_template`テーブル(なくてよし)](#message_templateテーブルなくてよし)
       - [`message`テーブル](#messageテーブル)
 
-## 確認事項
+
+> ## 確認事項
 ### mainテーブル
-- [ ] `hos_div`に存在する内容をSQLで抽出
+- [x] `hos_div`に存在する内容をSQLで抽出
     →``` SELECT DISTINCT `hos_div` FROM `main`; ```を実行
     ↳重複を削除した保存されているデータが出力される
 
-- [ ] `med_ass`(医師会)に対応する病院長、理事長情報がすべてあるのか
+**現状のデータに存在した内容**
+| hos_div |
+|------|
+| 診療所 |
+| 病院 |
+| 地域支援 |
+| 特定機能 |
+| 総合病院 |
+
+- [x] `med_ass`(医師会)に対応する病院長、理事長情報がすべてあるのか
 → 新テーブルでは、病院長、理事長情報へ医師会情報を紐づけるため
 ↳ 確認のため、```SELECT `med_ass`, `chi_name`, `pre_name` FROM `main` WHERE TRIM(`med_ass`) <> '' AND `med_ass` IS NOT NULL;```を実行する
 ☆☆☆ そもそも医師会名は存在するのか
 
-- [ ] あ
+**結果**
+- med_ass ：医師会
+- chi_name：理事長
+- pre_name：病院長
 
-# メモ
+`医師会・病院長あり、医師会のみ`
+![alt text](image-2.png)
+`医師会なし・病院長あり、医師会なし・理事長・病院長あり`
+![alt text](image-1.png)
+`すべてなし`
+![alt text](image.png)
+
+→ テーブルを分けずにhospitalsへつけてもよい？
+
+> # メモ
 
 ## 既存テーブルの修正
 
@@ -42,43 +64,67 @@
  `description` `type_id` → 不要？
 PK：`type_code`で代用
 
+---
+
 #### `hospital_staff` テーブル
 `staff_id` → カラム名変更
 各医療機関の人物のIDはわからないかつAIのため
-
-#### `hospital_staff` テーブル
 `role_type` → 理事長、病院長のみ？の役職を登録
+`association_id` 削除
+
+---
 
 #### `medical_services` テーブル
 `service_id` 削除
 
+---
+
 #### `hospital_departments` テーブル
 `is_primary`、`notes`、`created_at`　削除
+
+---
 
 #### `audit_logs` テーブル
 `user_name`、`user_facility`、`user_department`　削除
 
+---
+
 #### `areas` テーブル
-`area_id`、`search_area_name`、`display_area_name`　削除
+`area_id`、`search_area_name`、`display_area_name`、`secondary_medical_area_code`　削除
+`preaecture` 追加（`addresses`テーブルにあったが、こちらの方がふさわしいと感じたため）
+
+---
 
 #### `addresses` テーブル
 `area_name`、`city`、`ward`、`town`　削除
 
+---
+
 #### `medical_departments` テーブル
-`display_order`、`medical_department`　削除
+`display_order`、`medical_department`、`is_active`　削除
 `category_id` → `category`　診療科カテゴリ(名)へ変更
+
+---
 
 #### `madical_categories` テーブル
 `display_order`　削除
 最悪テーブル削除
 
+---
+
 #### `inquiries`テーブル
 コンタクト履歴(インポート)のため、削除
 
+---
+
+#### `contact_details`テーブル
+`contact_type`　削除
+
 #### `documents`テーブル
 `message`、`maintenance`、`q_a`を統合しているため、不都合あり
+→別途組みなおす必要あり
 
-
+---
 
 ## 付け加えたいテーブル
 #### `maintenance`テーブル
