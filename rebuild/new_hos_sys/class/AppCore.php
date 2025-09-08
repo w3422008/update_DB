@@ -30,23 +30,27 @@ class AppCore {
      * エラー時は500で終了。
      */
     private function initDb() {
+        $host = getenv('DB_HOST') ?: 'localhost';      // XAMPPの既定
+        $port = getenv('DB_PORT') ?: '3306';
+        $db   = getenv('DB_DATABASE') ?: 'new_hossysdb'; // ←XAMPP側のDB名に合わせる
+        $user = getenv('DB_USERNAME') ?: 'root';
+        $pass = getenv('DB_PASSWORD') ?: '';
+
+        $dsn = "mysql:host={$host};port={$port};dbname={$db};charset=utf8mb4";
+
         try {
-            $this->pdo = new PDO(
-                'mysql:host=localhost;dbname=new_hossysdb;charset=utf8mb4',
-                'root',
-                '',
-                [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::ATTR_EMULATE_PREPARES => false,
-                ]
-            );
+            $this->pdo = new PDO($dsn, $user, $pass, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            ]);
         } catch (PDOException $e) {
             http_response_code(500);
-            echo 'DB connection failed.';
+            echo 'DB connection failed: ' . htmlspecialchars($e->getMessage());
             exit;
         }
     }
+
 
     /**
      * セッションの初期化とセキュリティ設定
