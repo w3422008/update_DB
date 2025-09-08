@@ -1,4 +1,4 @@
-****# DB案
+# DB案 
 
 ### 1. 医療機関基本情報系
 
@@ -12,6 +12,9 @@
 | hospital_name | varchar(100) | NOT NULL | 医療機関名 |
 | status | enum('active','closed') | DEFAULT 'active' | 運営状況 |
 | bed | int(11) | NOT NULL | 許可病床数 |
+| has_pt | boolean | DEFAULT false | 理学療法士在籍フラグ |
+| has_ot | boolean | DEFAULT false | 作業療法士在籍フラグ |
+| has_st | boolean | DEFAULT false | 言語聴覚療法士在籍フラグ |
 | notes | text | NULL | 備考（基本情報） |
 | created_at | timestamp | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | timestamp | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
@@ -22,7 +25,7 @@
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| type_id | varchar(10) | PRIMARY KEY NOT NULL | 病院区分ID |
+| type_id | varchar(11) | PRIMARY KEY NOT NULL | 病院区分ID |
 | type_name | varchar(50) | NOT NULL | 区分名 |
 
 #### `addresses` テーブル（住所情報）
@@ -49,6 +52,20 @@
 | email | varchar(254) | NULL | メールアドレス |
 | website | varchar(500) | NULL | ウェブサイト |
 
+#### `hospitals_ward_types`(病棟種類テーブル)
+病棟種類を持つかどうかを管理
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
+| ward_id | varchar(10) | PRIMARY KEY(複合主キー) | 病棟種類ID |
+
+#### `ward_types`(病棟種類マスタ)
+病棟種類名を管理する
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| ward_id | varchar(10) | PRIMARY KEY NOT NULL | 病棟種類ID |
+| ward_name | varchar(20) | NOT NULL | 病棟名 |
+
 ### 2. 人員情報系
 
 #### `hospital_staff` テーブル（病院スタッフ情報）
@@ -64,16 +81,6 @@
 | graduation_year | year(4) | NULL | 卒業年度 |
 | alma_mater | varchar(100) | NULL | 出身校 |
 | notes | text | NULL | 備考 |
-
-#### `削除候補``medical_association` テーブル（医師会情報マスタ）
-医師会についての情報を管理
-
-| フィールド名 | データ型 | 制約 | 説明 |
-|-------------|----------|------|------|
-| section_id | int(11) | PRIMARY KEY AUTO_INCREMENT | 区分コード |
-| area_id | varchar(20) | FOREIGN KEY | 地域コード |
-| med_area | varchar(60) | NOT NULL | 二次医療圏 |
-| med_association | varchar(60) | NOT NULL | 医師会名 |
 
 ### 3. 診療時間系
 
@@ -98,20 +105,9 @@
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| department_id | int(11) | PRIMARY KEY AUTO_INCREMENT | 診療科ID |
-| department_code | varchar(10) | UNIQUE NOT NULL | 診療科コード |
+| department_id | varchar(10) | PRIMARY KEY NOT NULL | 診療科コード |
 | department_name | varchar(100) | NOT NULL | 診療科名 |
 | category | varchar(100) | NOT NULL | 診療科カテゴリ名 |
-
-#### `削除候補``medical_categories` テーブル（診療科カテゴリ）
-診療科の大分類を管理
-
-| フィールド名 | データ型 | 制約 | 説明 |
-|-------------|----------|------|------|
-| category_id | int(11) | PRIMARY KEY AUTO_INCREMENT | カテゴリID |
-| category_code | varchar(10) | UNIQUE NOT NULL | カテゴリコード |
-| category_name | varchar(50) | NOT NULL | カテゴリ名 |
-| display_order | int(11) | DEFAULT 0 | 表示順序 |
 
 #### `hospital_departments` テーブル（病院診療科関連）
 医療機関が対応している診療科を管理
@@ -141,8 +137,22 @@
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
 | service_id | varchar(20) | PRIMARY KEY(複合主キー) | 診療内容ID |
-| notes | text | NULL | 個別備考 |
 
+#### `clinical_pathway_hospital`テーブル（連携パスと医療機関を接続）
+地域連携クリニカルパスの存在有無を管理
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
+| clinical_pathway_id | varchar(10) | PRIMARY KEY(複合主キー) | 連携パスID |
+
+#### `clinical_pathway`テーブル（連携パスマスタ）
+地域連携クリニカルパス名を管理
+detail/control/relation_control.phpファイルに内容あり
+（`入退院支援連携先病院`,`脳卒中パス`,`大腿骨パス`,`心筋梗塞・心不全パス`,`胃がんパス`,`大腸がんパス`,`乳がんパス`,`肺がんパス`,`肝がんパス`が存在）
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| clinical_pathway_id | varchar(10) | PRIMARY KEY | 連携パスID |
+| path_name | varchar(30) | NOT NULL | 連携パス名 |
 
 ### 6. 地域・エリア系
 

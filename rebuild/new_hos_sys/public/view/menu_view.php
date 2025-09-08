@@ -27,14 +27,13 @@
     <div class="uk-container uk-container-large uk-margin-top">
         <div class="menu-grid">
             <div class="uk-flex uk-flex-center">
-                <div class="uk-width-2-3@m uk-width-1-1@s">
-                    <div class="uk-grid uk-child-width-1-2@m uk-child-width-1-1@s uk-grid-match uk-grid-small" uk-grid>
-                        <!-- 1行目 -->
+                <div class="uk-width-5-6@l uk-width-1-1@m">
+                    <div class="uk-grid uk-child-width-1-3@l uk-child-width-1-2@m uk-child-width-1-1@s uk-grid-match uk-grid-medium" uk-grid>
                         <div>
                             <div class="menu-card" uk-tooltip="title: 医療機関が検索できます; pos: bottom">
                                 <a href="#dashboard" class="menu-card-link">
                                     <div class="menu-card-icon">
-                                        <span uk-icon="icon: search; ratio: 2.5"></span>
+                                        <span uk-icon="icon: search; ratio: 2"></span>
                                     </div>
                                     <h3 class="menu-card-title">医療機関 検索</h3>
                                 </a>
@@ -44,19 +43,21 @@
                             <div class="menu-card" uk-tooltip="title: 医療機関の新規登録・削除に加え<br>医療機関を出力できます; pos: bottom">
                                 <a href="#messages" class="menu-card-link">
                                     <div class="menu-card-icon">
-                                        <span uk-icon="icon: comments; ratio: 2.5"></span>
+                                        <span uk-icon="icon: database; ratio: 2"></span>
                                     </div>
                                     <h3 class="menu-card-title">医療機関 管理/出力
                                     </h3>
                                 </a>
                             </div>
                         </div>
-                        <!-- 2行目 -->
+<?php
+                        if ($user_data['role'] === 'admin' || $user_data['role'] === 'system_admin'):
+?>
                         <div>
                             <div class="menu-card" uk-tooltip="title: Manage user accounts; pos: bottom">
                                 <a href="#users" class="menu-card-link">
                                     <div class="menu-card-icon">
-                                        <span uk-icon="icon: pull; ratio: 2.5"></span>
+                                        <span uk-icon="icon: pull; ratio: 2"></span>
                                     </div>
                                     <h3 class="menu-card-title">データインポート</h3>
                                 </a>
@@ -66,33 +67,41 @@
                             <div class="menu-card" uk-tooltip="title: ユーザーの管理ができます; pos: bottom">
                                 <a href="#reports" class="menu-card-link">
                                     <div class="menu-card-icon">
-                                        <span uk-icon="icon: users; ratio: 2.5"></span>
+                                        <span uk-icon="icon: users; ratio: 2"></span>
                                     </div>
                                     <h3 class="menu-card-title">ユーザ－管理</h3>
                                 </a>
                             </div>
                         </div>
-                        <!-- 3行目 -->
+<?php
+                        endif;
+?>
                         <div>
-                            <div class="menu-card" uk-tooltip="title: Adjust your preferences; pos: bottom">
+                            <div class="menu-card" uk-tooltip="title: システムに関する<br>問い合わせができます; pos: bottom">
                                 <a href="#settings" class="menu-card-link">
                                     <div class="menu-card-icon">
-                                        <span uk-icon="icon: comments; ratio: 2.5"></span>
+                                        <span uk-icon="icon: mail; ratio: 2"></span>
                                     </div>
                                     <h3 class="menu-card-title">お問い合わせ</h3>
                                 </a>
                             </div>
                         </div>
+<?php
+                        if ($user_data['role'] === 'system_admin'):
+?>
                         <div>
                             <div class="menu-card" uk-tooltip="title: システムに関する情報を<br>管理します。; pos: bottom">
-                                <a href="#support" class="menu-card-link">
+                                <a href="#management" class="menu-card-link">
                                     <div class="menu-card-icon">
-                                        <span uk-icon="icon: settings; ratio: 2.5"></span>
+                                        <span uk-icon="icon: settings; ratio: 2"></span>
                                     </div>
                                     <h3 class="menu-card-title">システム管理</h3>
                                 </a>
                             </div>
                         </div>
+<?php
+                        endif;
+?>
                     </div>
                 </div>
             </div>
