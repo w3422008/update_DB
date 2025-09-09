@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>医療機関情報システム｜管理＆全件出力（統合版）</title>
+<style>
+  /* ===== ベース ===== */
+  :root {
+    --brand:#2e885f;          /* メインの緑 */
+    --brand-2:#4aa57b;        /* サブの緑 */
+    --soft:#e9f8f1;           /* 薄い緑の背景 */
+    --ink:#203128;            /* 文字色 */
+    --muted:#6a7c74;          /* サブ文字色 */
+    --ring: 0 0 0 3px rgba(46,136,95,.25);
+    --shadow: 0 10px 25px rgba(46,136,95,.18);
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    color: var(--ink);
+    background: #fff;
+    line-height: 1.6;
+  }
+
+  /* ===== ヘッダー ===== */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: #fff;
+    border-bottom: 1px solid #e8eee9;
+    backdrop-filter: saturate(180%) blur(6px);
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 16px 20px;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: space-between;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    font-size: clamp(18px, 2.2vw, 22px);
+    color: var(--brand);
+    letter-spacing: .02em;
+  }
+  .brand .dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--brand);
+    box-shadow: 0 0 0 6px rgba(46,136,95,.12);
+  }
+  .actions {
+    display: flex; gap: 10px; align-items: center;
+  }
+  .icon-btn {
+    border: 1px solid #e2ece6;
+    background: #fff;
+    padding: 8px 12px;
+    border-radius: 12px;
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .icon-btn:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+  .icon { width: 18px; height:18px; display:inline-block; }
+
+  /* ===== タブ ===== */
+  .tabs {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 14px 20px 0;
+    border-bottom: 1px solid #e8eee9;
+  }
+  .tab {
+    appearance: none;
+    border: 0;
+    background: #f4faf7;
+    color: #2d4339;
+    padding: 10px 14px;
+    border-radius: 12px 12px 0 0;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .tab[aria-selected="true"] {
+    background: var(--soft);
+    color: var(--brand);
+    box-shadow: inset 0 -2px 0 var(--brand);
+  }
+
+  /* ===== セクション ===== */
+  main { background: var(--soft); }
+  section {
+    display: none;
+    padding: 28px 20px 40px;
+  }
+  section.active { display: block; }
+  .panel {
+    max-width: 1100px; margin: 0 auto; background: #fff;
+    border: 1px solid #e8eee9; border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px;
+  }
+  .panel + .panel { margin-top: 18px; }
+
+  .panel h2 {
+    margin: 0 0 10px;
+    font-size: clamp(18px, 2.2vw, 20px);
+    color: var(--brand);
+  }
+  .panel p.lead { margin: 0 0 18px; color: var(--muted); }
+
+  /* ===== ボタン ===== */
+  .btn {
+    appearance: none;
+    border: 0;
+    padding: 14px 18px;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+    background: var(--brand);
+    color: white;
+    display: inline-flex; align-items: center; gap: 10px;
+    box-shadow: var(--shadow);
+  }
+  .btn:focus-visible { outline: none; box-shadow: var(--shadow), var(--ring); }
+  .btn-lg { font-size: 18px; padding: 18px 28px; }
+  .btn-ghost {
+    background: #fff; color: var(--brand);
+    border: 1px solid #dfeae4;
+  }
+  .btn-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  /* ===== カード行 ===== */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 18px;
+  }
+  .col-6 { grid-column: span 6; }
+  .col-12 { grid-column: span 12; }
+  @media (max-width: 880px) {
+    .col-6 { grid-column: span 12; }
+  }
+
+  /* ===== ログ（ダミー） ===== */
+  details.log {
+    border: 1px dashed #e1ebe5; border-radius: 12px; padding: 12px 14px;
+    background: #fbfefd;
+  }
+  details.log summary {
+    cursor: pointer; font-weight: 700; color: #2d4339;
+  }
+  .log-list { margin: 10px 0 0; padding-left: 1.2rem; }
+  .muted { color: var(--muted); font-size: 14px; }
+
+  /* ===== トースト ===== */
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    background: #203128; color: #fff; padding: 12px 18px; border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    opacity: 0; pointer-events: none; transition: .25s ease;
+  }
+  .toast.show { opacity: 1; pointer-events: auto; }
+
+  /* ===== フッター ===== */
+  footer {
+    text-align: center; color: var(--muted);
+    padding: 30px 16px 50px;
+    background: var(--soft);
+  }
+</style>
+</head>
+<body>
+  <!-- ヘッダー -->
+  <header aria-label="ヘッダー">
+    <div class="container">
+      <div class="row">
+        <div class="brand"><span class="dot" aria-hidden="true"></span>医療機関情報システム</div>
+        <div class="actions">
+          <!-- ※ダミーリンク。実装がある場合は href を差し替え -->
+          <a class="icon-btn" href="#" aria-label="検索"><span class="icon">🔍</span>検索</a>
+          <a class="icon-btn" href="#" aria-label="お問い合わせ"><span class="icon">💬</span>お問い合わせ</a>
+          <a class="icon-btn" href="#" aria-label="マニュアル"><span class="icon">📘</span>マニュアル</a>
+        </div>
+      </div>
+    </div>
+    <div class="tabs" role="tablist" aria-label="機能タブ">
+      <button class="tab" role="tab" aria-selected="true" aria-controls="tab-export" id="tabbtn-export">全件出力</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="tab-manage" id="tabbtn-manage">医療機関 管理</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===== 全件出力タブ ===== -->
+    <section id="tab-export" class="active" role="tabpanel" aria-labelledby="tabbtn-export">
+      <div class="container">
+        <div class="panel">
+          <h2>全件出力</h2>
+          <p class="lead">医療機関情報の<strong>基本情報</strong>を対象に、全件をまとめてエクスポートします。</p>
+          <div class="btn-row" style="margin-top: 6px;">
+            <button id="btn-export" class="btn btn-lg" aria-label="全件出力を実行">
+              📦 全件出力
+            </button>
+            <button id="btn-preview" class="btn btn-ghost" aria-label="出力形式のプレビュー">👁 形式プレビュー</button>
+          </div>
+          <p class="muted" id="export-status" style="margin-top:10px;">最終出力: 未実行</p>
+        </div>
+
+        <div class="panel">
+          <h2>出力オプション</h2>
+          <p class="lead">出力対象と形式を選べます（ダミー・フロント実装）。</p>
+          <div class="grid">
+            <div class="col-6">
+              <label><input type="checkbox" checked> 基本情報</label><br />
+              <label><input type="checkbox"> 連携情報</label><br />
+              <label><input type="checkbox"> 兼業情報</label><br />
+              <label><input type="checkbox"> 医療連携懇話会</label>
+            </div>
+            <div class="col-6">
+              <label><input type="radio" name="fmt" value="csv" checked> CSV</label><br />
+              <label><input type="radio" name="fmt" value="xlsx"> Excel（.xlsx）</label><br />
+              <label><input type="radio" name="fmt" value="json"> JSON</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 管理タブ ===== -->
+    <section id="tab-manage" role="tabpanel" aria-labelledby="tabbtn-manage">
+      <div class="container">
+        <div class="grid">
+          <div class="col-6">
+            <div class="panel">
+              <h2>医療機関 管理</h2>
+              <p class="lead">新規追加・削除などの主要アクションをまとめました。</p>
+              <div class="btn-row">
+                <button id="btn-add" class="btn" aria-label="新規追加">➕ 新規追加</button>
+                <button id="btn-delete" class="btn btn-ghost" aria-label="削除">🗑 削除</button>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="panel">
+              <h2>ログ</h2>
+              <p class="lead">新規追加 / 削除のログを確認できます。</p>
+              <details class="log" open>
+                <summary>新規追加 ログ</summary>
+                <ol class="log-list" id="log-add">
+                  <li>2025-09-09 12:05 ID=HOS-001 を追加</li>
+                  <li>2025-09-08 09:41 ID=HOS-221 を追加</li>
+                </ol>
+              </details>
+              <div style="height:10px"></div>
+              <details class="log">
+                <summary>削除 ログ</summary>
+                <ol class="log-list" id="log-del">
+                  <li>2025-09-07 17:20 ID=HOS-032 を削除</li>
+                </ol>
+              </details>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">完了しました</div>
+
+  <footer>
+    © 医療機関情報システム – 統合UIサンプル（フロント実装）
+  </footer>
+
+<script>
+  // ===== タブ切替（アクセシブル） =====
+  const tabs = [...document.querySelectorAll('.tab')];
+  const panels = {
+    "tabbtn-export": document.getElementById('tab-export'),
+    "tabbtn-manage": document.getElementById('tab-manage'),
+  };
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabs.forEach(b => b.setAttribute('aria-selected', 'false'));
+      btn.setAttribute('aria-selected', 'true');
+      Object.values(panels).forEach(p => p.classList.remove('active'));
+      panels[btn.id].classList.add('active');
+      // フォーカス移動で操作感アップ
+      panels[btn.id].querySelector('h2')?.focus?.();
+    });
+  });
+
+  // ===== トースト（簡易） =====
+  const toast = document.getElementById('toast');
+  function showToast(text) {
+    toast.textContent = text;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+
+  // ===== ダミー処理：全件出力 =====
+  const exportBtn = document.getElementById('btn-export');
+  const exportStatus = document.getElementById('export-status');
+  exportBtn.addEventListener('click', () => {
+    exportBtn.disabled = true;
+    const oldText = exportBtn.textContent;
+    exportBtn.textContent = '⏳ 出力中…';
+    // 2秒待ってから完了（サーバがあればここでAPI呼び出し）
+    setTimeout(() => {
+      exportBtn.disabled = false;
+      exportBtn.textContent = oldText;
+      const now = new Date();
+      exportStatus.textContent = '最終出力: ' + now.toLocaleString();
+      showToast('全件出力が完了しました');
+    }, 2000);
+  });
+  document.getElementById('btn-preview').addEventListener('click', () => {
+    alert('プレビュー（ダミー）：CSV の1行目 = "id,name,address,phone"');
+  });
+
+  // ===== ダミー処理：新規追加／削除 =====
+  const logAdd = document.getElementById('log-add');
+  const logDel = document.getElementById('log-del');
+  const btnAdd = document.getElementById('btn-add');
+  const btnDel = document.getElementById('btn-delete');
+
+  btnAdd.addEventListener('click', () => {
+    const id = prompt('追加する医療機関IDを入力してください（例: HOS-999）');
+    if (!id) return;
+    const li = document.createElement('li');
+    li.textContent = new Date().toLocaleString() + ' ID=' + id + ' を追加';
+    logAdd.prepend(li);
+    showToast('新規追加しました');
+  });
+
+  btnDel.addEventListener('click', () => {
+    const id = prompt('削除する医療機関IDを入力してください');
+    if (!id) return;
+    if (!confirm('ID=' + id + ' を削除します。よろしいですか？')) return;
+    const li = document.createElement('li');
+    li.textContent = new Date().toLocaleString() + ' ID=' + id + ' を削除';
+    logDel.prepend(li);
+    showToast('削除しました');
+  });
+</script>
+</body>
+</html>
