@@ -30,9 +30,9 @@ class AppCore {
      * エラー時は500で終了。
      */
     private function initDb() {
-        $host = getenv('DB_HOST') ?: 'localhost';      // XAMPPの既定
+        $host = getenv('DB_HOST') ?: 'localhost';
         $port = getenv('DB_PORT') ?: '3306';
-        $db   = getenv('DB_DATABASE') ?: 'new_hossysdb'; // ←XAMPP側のDB名に合わせる
+        $db   = getenv('DB_DATABASE') ?: 'new_hossysdb';
         $user = getenv('DB_USERNAME') ?: 'root';
         $pass = getenv('DB_PASSWORD') ?: '';
 
