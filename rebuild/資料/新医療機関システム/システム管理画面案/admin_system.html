@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>システム管理者画面</title>
+    
+    <!-- Ant Design CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/5.12.8/reset.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/5.12.8/antd.min.css">
+    
+    <!-- Ant Design Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ant-design-icons/5.2.6/index.min.css">
+    
+    <!-- Custom Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/admin_system.css">
+</head>
+<body>
+    <!-- Layout Container -->
+    <div class="ant-layout">
+        <!-- Header -->
+        <header class="ant-layout-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <span class="header-icon">🛡️</span>
+                    <h1 class="header-title">システム管理者画面</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="ant-btn ant-btn-text" id="settingsBtn">
+                        <span class="anticon">⚙️</span>
+                    </button>
+                    <button class="ant-btn ant-btn-text" id="logoutBtn">
+                        <span class="anticon">🚪</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="ant-layout-container">
+            <!-- Sidebar -->
+            <nav class="ant-layout-sider">
+                <div class="sider-menu">
+                    <div class="ant-menu ant-menu-vertical">
+                        <div class="ant-menu-item ant-menu-item-selected" data-section="notifications">
+                            <span class="menu-icon">🔔</span>
+                            <span class="menu-title">通知一覧</span>
+                        </div>
+                        <div class="ant-menu-item" data-section="create-notification">
+                            <span class="menu-icon">➕</span>
+                            <span class="menu-title">通知作成</span>
+                        </div>
+                        <div class="ant-menu-item" data-section="logs">
+                            <span class="menu-icon">📋</span>
+                            <span class="menu-title">ログ管理</span>
+                        </div>
+                        <div class="ant-menu-item" data-section="maintenance">
+                            <span class="menu-icon">🔧</span>
+                            <span class="menu-title">メンテナンス</span>
+                        </div>
+                        <div class="ant-menu-item" data-section="database">
+                            <span class="menu-icon">💾</span>
+                            <span class="menu-title">DBデータ管理</span>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="ant-layout-content">
+                <!-- 通知一覧画面 -->
+                <section id="notifications-section" class="content-section active">
+                    <div class="page-header">
+                        <div class="page-header-content">
+                            <h2 class="page-title">通知一覧</h2>
+                            <button class="ant-btn ant-btn-primary ant-btn-circle" id="refreshNotifications">
+                                <span class="anticon">🔄</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="ant-card">
+                        <div class="ant-card-body">
+                            <div class="notification-filters">
+                                <div class="ant-space">
+                                    <span class="ant-tag ant-tag-checkable ant-tag-checkable-checked" data-filter="all">すべて</span>
+                                    <span class="ant-tag ant-tag-checkable" data-filter="unread">未読</span>
+                                    <span class="ant-tag ant-tag-checkable" data-filter="urgent">緊急</span>
+                                    <span class="ant-tag ant-tag-checkable" data-filter="system">システム</span>
+                                </div>
+                            </div>
+                            <div class="ant-list" id="notificationList">
+                                <!-- 動的に生成される通知項目 -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 通知作成画面 -->
+                <section id="create-notification-section" class="content-section">
+                    <div class="page-header">
+                        <h2 class="page-title">通知作成</h2>
+                    </div>
+                    
+                    <div class="ant-card">
+                        <div class="ant-card-body">
+                            <form class="ant-form ant-form-vertical" id="notificationForm">
+                                <div class="ant-form-item">
+                                    <label class="ant-form-item-label">通知タイトル</label>
+                                    <div class="ant-form-item-control">
+                                        <input type="text" class="ant-input" id="notificationTitle" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="ant-form-item">
+                                    <label class="ant-form-item-label">通知内容</label>
+                                    <div class="ant-form-item-control">
+                                        <textarea class="ant-input" id="notificationContent" rows="5" required></textarea>
+                                    </div>
+                                </div>
+                                
+                                <div class="ant-form-item">
+                                    <label class="ant-form-item-label">優先度</label>
+                                    <div class="ant-form-item-control">
+                                        <select class="ant-select ant-select-single" id="notificationPriority">
+                                            <option value="low">低</option>
+                                            <option value="normal" selected>通常</option>
+                                            <option value="high">高</option>
+                                            <option value="urgent">緊急</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="ant-form-item">
+                                    <label class="ant-form-item-label">送信先</label>
+                                    <div class="ant-form-item-control">
+                                        <div class="ant-checkbox-group">
+                                            <label class="ant-checkbox-wrapper">
+                                                <span class="ant-checkbox">
+                                                    <input type="checkbox" class="ant-checkbox-input" value="all" checked>
+                                                    <span class="ant-checkbox-inner"></span>
+                                                </span>
+                                                <span>全ユーザー</span>
+                                            </label>
+                                            <label class="ant-checkbox-wrapper">
+                                                <span class="ant-checkbox">
+                                                    <input type="checkbox" class="ant-checkbox-input" value="admin">
+                                                    <span class="ant-checkbox-inner"></span>
+                                                </span>
+                                                <span>管理者のみ</span>
+                                            </label>
+                                            <label class="ant-checkbox-wrapper">
+                                                <span class="ant-checkbox">
+                                                    <input type="checkbox" class="ant-checkbox-input" value="medical">
+                                                    <span class="ant-checkbox-inner"></span>
+                                                </span>
+                                                <span>医療機関のみ</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="ant-form-item">
+                                    <div class="ant-space">
+                                        <button type="button" class="ant-btn ant-btn-default" id="previewBtn">プレビュー</button>
+                                        <button type="submit" class="ant-btn ant-btn-primary">送信</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ログ管理画面 -->
+                <section id="logs-section" class="content-section">
+                    <div class="page-header">
+                        <div class="page-header-content">
+                            <h2 class="page-title">ログ管理</h2>
+                            <button class="ant-btn ant-btn-primary ant-btn-circle" id="exportLogs">
+                                <span class="anticon">⬇️</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="ant-card">
+                        <div class="ant-card-body">
+                            <div class="log-filters">
+                                <div class="ant-row ant-row-space-between">
+                                    <div class="ant-col">
+                                        <div class="ant-form-item">
+                                            <label class="ant-form-item-label">ログレベル</label>
+                                            <div class="ant-form-item-control">
+                                                <select class="ant-select ant-select-single" id="logLevel">
+                                                    <option value="all">すべて</option>
+                                                    <option value="info">INFO</option>
+                                                    <option value="warning">WARNING</option>
+                                                    <option value="error">ERROR</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ant-col">
+                                        <div class="ant-form-item">
+                                            <label class="ant-form-item-label">期間（開始）</label>
+                                            <div class="ant-form-item-control">
+                                                <input type="datetime-local" class="ant-input" id="logStartDate">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ant-col">
+                                        <div class="ant-form-item">
+                                            <label class="ant-form-item-label">期間（終了）</label>
+                                            <div class="ant-form-item-control">
+                                                <input type="datetime-local" class="ant-input" id="logEndDate">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ant-col">
+                                        <button class="ant-btn ant-btn-primary" id="filterLogs">フィルター</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="ant-table-wrapper">
+                                <table class="ant-table-tbody" id="logTable">
+                                    <thead class="ant-table-thead">
+                                        <tr>
+                                            <th class="ant-table-cell">日時</th>
+                                            <th class="ant-table-cell">レベル</th>
+                                            <th class="ant-table-cell">ユーザー</th>
+                                            <th class="ant-table-cell">アクション</th>
+                                            <th class="ant-table-cell">詳細</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="logTableBody">
+                                        <!-- 動的に生成されるログ項目 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- メンテナンス画面 -->
+                <section id="maintenance-section" class="content-section">
+                    <div class="page-header">
+                        <h2 class="page-title">メンテナンス</h2>
+                    </div>
+                    
+                    <div class="ant-row ant-row-gutter-16">
+                        <div class="ant-col ant-col-8">
+                            <div class="ant-card">
+                                <div class="ant-card-head">
+                                    <div class="ant-card-head-title">システム設定</div>
+                                </div>
+                                <div class="ant-card-body">
+                                    <div class="setting-item">
+                                        <span class="setting-label">メンテナンスモード</span>
+                                        <label class="ant-switch">
+                                            <input type="checkbox" id="maintenanceMode">
+                                            <span class="ant-switch-handle"></span>
+                                            <span class="ant-switch-inner"></span>
+                                        </label>
+                                    </div>
+                                    <div class="setting-item">
+                                        <span class="setting-label">新規登録受付</span>
+                                        <label class="ant-switch">
+                                            <input type="checkbox" id="newRegistration" checked>
+                                            <span class="ant-switch-handle"></span>
+                                            <span class="ant-switch-inner"></span>
+                                        </label>
+                                    </div>
+                                    <div class="setting-item">
+                                        <span class="setting-label">ログイン制限</span>
+                                        <label class="ant-switch">
+                                            <input type="checkbox" id="loginRestriction">
+                                            <span class="ant-switch-handle"></span>
+                                            <span class="ant-switch-inner"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="ant-col ant-col-8">
+                            <div class="ant-card">
+                                <div class="ant-card-head">
+                                    <div class="ant-card-head-title">キャッシュ管理</div>
+                                </div>
+                                <div class="ant-card-body">
+                                    <div class="ant-space-vertical">
+                                        <button class="ant-btn ant-btn-default ant-btn-block" id="clearCache">
+                                            <span class="anticon">🗑️</span>
+                                            キャッシュクリア
+                                        </button>
+                                        <button class="ant-btn ant-btn-default ant-btn-block" id="refreshConfig">
+                                            <span class="anticon">🔄</span>
+                                            設定再読み込み
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="ant-col ant-col-8">
+                            <div class="ant-card">
+                                <div class="ant-card-head">
+                                    <div class="ant-card-head-title">バックアップ</div>
+                                </div>
+                                <div class="ant-card-body">
+                                    <div class="ant-space-vertical">
+                                        <button class="ant-btn ant-btn-primary ant-btn-block" id="createBackup">
+                                            <span class="anticon">💾</span>
+                                            バックアップ作成
+                                        </button>
+                                        <button class="ant-btn ant-btn-default ant-btn-block" id="restoreBackup">
+                                            <span class="anticon">📁</span>
+                                            バックアップ復元
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- DBデータ管理画面 -->
+                <section id="database-section" class="content-section">
+                    <div class="page-header">
+                        <div class="page-header-content">
+                            <h2 class="page-title">DBデータ管理</h2>
+                            <button class="ant-btn ant-btn-primary ant-btn-circle" id="refreshDatabase">
+                                <span class="anticon">🔄</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="ant-card">
+                        <div class="ant-card-body">
+                            <div class="ant-tabs">
+                                <div class="ant-tabs-tab-bar">
+                                    <div class="ant-tabs-tab ant-tabs-tab-active" data-table="users">ユーザー</div>
+                                    <div class="ant-tabs-tab" data-table="medical_institutions">医療機関</div>
+                                    <div class="ant-tabs-tab" data-table="system_logs">システムログ</div>
+                                    <div class="ant-tabs-tab" data-table="configurations">設定</div>
+                                </div>
+                            </div>
+                            
+                            <div class="database-controls">
+                                <div class="ant-row ant-row-space-between">
+                                    <div class="ant-col">
+                                        <div class="ant-input-search">
+                                            <input type="text" class="ant-input" id="dbSearch" placeholder="検索...">
+                                            <span class="ant-input-suffix">🔍</span>
+                                        </div>
+                                    </div>
+                                    <div class="ant-col">
+                                        <button class="ant-btn ant-btn-primary" id="addRecord">
+                                            <span class="anticon">➕</span>
+                                            新規追加
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="ant-table-wrapper">
+                                <table class="ant-table-tbody" id="databaseTable">
+                                    <thead class="ant-table-thead" id="databaseTableHead">
+                                        <!-- 動的に生成されるヘッダー -->
+                                    </thead>
+                                    <tbody id="databaseTableBody">
+                                        <!-- 動的に生成されるデータ -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- モーダル -->
+    <div class="ant-modal-mask" id="confirmModal">
+        <div class="ant-modal-wrap">
+            <div class="ant-modal">
+                <div class="ant-modal-content">
+                    <div class="ant-modal-header">
+                        <div class="ant-modal-title" id="modalTitle">確認</div>
+                    </div>
+                    <div class="ant-modal-body">
+                        <p id="modalMessage">この操作を実行してもよろしいですか？</p>
+                    </div>
+                    <div class="ant-modal-footer">
+                        <div class="ant-space">
+                            <button class="ant-btn ant-btn-default" id="modalCancel">キャンセル</button>
+                            <button class="ant-btn ant-btn-primary" id="modalConfirm">実行</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/admin_system.js"></script>
+</body>
+</html>
