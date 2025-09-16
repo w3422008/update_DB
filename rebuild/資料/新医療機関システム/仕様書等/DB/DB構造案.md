@@ -11,7 +11,7 @@
 | hospital_type_id | int(11) | FOREIGN KEY | 病院区分ID |
 | hospital_name | varchar(100) | NOT NULL | 医療機関名 |
 | status | enum('active','closed') | DEFAULT 'active' | 運営状況 |
-| bed | int(11) | NOT NULL | 許可病床数 |
+| bed | int(11) | NULL | 許可病床数 |
 | has_pt | boolean | DEFAULT false | 理学療法士在籍フラグ |
 | has_ot | boolean | DEFAULT false | 作業療法士在籍フラグ |
 | has_st | boolean | DEFAULT false | 言語聴覚療法士在籍フラグ |
@@ -27,6 +27,8 @@
 |-------------|----------|------|------|
 | type_id | varchar(11) | PRIMARY KEY NOT NULL | 病院区分ID |
 | type_name | varchar(50) | NOT NULL | 区分名 |
+| is_active | boolean | DEFAULT true | 有効フラグ |
+| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
 
 #### `addresses` テーブル（住所情報）
 医療機関の住所情報を管理
@@ -65,10 +67,12 @@
 |-------------|----------|------|------|
 | ward_id | varchar(10) | PRIMARY KEY NOT NULL | 病棟種類ID |
 | ward_name | varchar(20) | NOT NULL | 病棟名 |
+| is_active | boolean | DEFAULT true | 有効フラグ |
+| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
 
 ### 2. 人員情報系
 
-#### `hospital_staff` テーブル（病院スタッフ情報）
+#### `hospital_staffs` テーブル（病院スタッフ情報）
 理事長、病院長などの重要人物情報を管理
 
 | フィールド名 | データ型 | 制約 | 説明 |
@@ -89,11 +93,10 @@
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| schedule_id | int(11) | PRIMARY KEY AUTO_INCREMENT | スケジュールID |
-| hospital_id | varchar(10) | FOREIGN KEY | 医療機関コード |
-| day_of_week | enum('monday','tuesday','wednesday','thursday','friday','saturday','sunday','holiday') | NOT NULL | 曜日 |
-| period | enum('AM','PM','AM_PM') | NOT NULL | 時間帯 |
-| is_available | boolean | DEFAULT false | 診療可否 |
+| hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
+| day_of_week | enum('monday','tuesday','wednesday','thursday','friday','saturday','sunday','holiday') | PRIMARY KEY(複合主キー) | 曜日 |
+| period | enum('AM','PM','AM_PM') | PRIMARY KEY(複合主キー) | 時間帯 |
+| is_available | boolean | DEFAULT true | 診療可否 |
 | start_time | time | NULL | 開始時間 |
 | end_time | time | NULL | 終了時間 |
 | notes | varchar(200) | NULL | 備考 |
@@ -108,15 +111,16 @@
 | department_id | varchar(10) | PRIMARY KEY NOT NULL | 診療科コード |
 | department_name | varchar(100) | NOT NULL | 診療科名 |
 | category | varchar(100) | NOT NULL | 診療科カテゴリ名 |
+| is_active | boolean | DEFAULT true | 有効フラグ |
+| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
 
 #### `hospital_departments` テーブル（病院診療科関連）
 医療機関が対応している診療科を管理
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| relation_id | int(11) | PRIMARY KEY AUTO_INCREMENT | 関連ID |
-| hospital_id | varchar(10) | FOREIGN KEY | 医療機関コード |
-| department_id | int(11) | FOREIGN KEY | 診療科ID |
+| hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
+| department_id | int(11) | PRIMARY KEY(複合主キー) | 診療科ID |
 
 ### 5. 診療内容系
 
@@ -126,9 +130,11 @@
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | service_code | varchar(10) | PRIMARY KEY(複合主キー) NOT NULL | 診療内容コード |
-| service_division | varchar(100) | PRIMARY KEY(複合主キー) NULL | 診療区分 |
+| service_division | varchar(100) | PRIMARY KEY(複合主キー) NOT NULL | 診療区分 |
 | service_category | varchar(100) | NULL | 診療部門 |
 | service_name | varchar(300) | NOT NULL | 診療内容名 |
+| is_active | boolean | DEFAULT true | 有効フラグ |
+| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
 
 #### `hospital_services` テーブル（病院診療内容関連）
 医療機関が提供している診療内容を管理
@@ -138,14 +144,14 @@
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
 | service_id | varchar(20) | PRIMARY KEY(複合主キー) | 診療内容ID |
 
-#### `clinical_pathway_hospital`テーブル（連携パスと医療機関を接続）
+#### `clinical_pathway_hospitals`テーブル（連携パスと医療機関を接続）
 地域連携クリニカルパスの存在有無を管理
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
 | clinical_pathway_id | varchar(10) | PRIMARY KEY(複合主キー) | 連携パスID |
 
-#### `clinical_pathway`テーブル（連携パスマスタ）
+#### `clinical_pathways`テーブル（連携パスマスタ）
 地域連携クリニカルパス名を管理
 detail/control/relation_control.phpファイルに内容あり
 （`入退院支援連携先病院`,`脳卒中パス`,`大腿骨パス`,`心筋梗塞・心不全パス`,`胃がんパス`,`大腸がんパス`,`乳がんパス`,`肺がんパス`,`肝がんパス`が存在）
@@ -153,6 +159,8 @@ detail/control/relation_control.phpファイルに内容あり
 |-------------|----------|------|------|
 | clinical_pathway_id | varchar(10) | PRIMARY KEY | 連携パスID |
 | path_name | varchar(30) | NOT NULL | 連携パス名 |
+| is_active | boolean | DEFAULT true | 有効フラグ |
+| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
 
 ### 6. 地域・エリア系
 
@@ -167,10 +175,12 @@ detail/control/relation_control.phpファイルに内容あり
 | city | varchar(30) | NULL | 市 |
 | ward | varchar(20) | NULL | 区 |
 | town | varchar(30) | NULL | 町 |
+| is_active | boolean | DEFAULT true | 有効フラグ |
+| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
 
 ### 7. 外部連携系
 
-#### `carna_connect` テーブル（カルナコネクト情報）`既存テーブル`
+#### `carna_connects` テーブル（カルナコネクト情報）`既存テーブル`
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
@@ -179,31 +189,45 @@ detail/control/relation_control.phpファイルに内容あり
 
 ### 8. 履歴・ログ系
 
-#### `audit_logs` テーブル（監査ログ）
-データ変更の監査ログを統合管理
+#### `unified_logs` テーブル（統合ログ）
+システム内のすべてのログ情報を一元管理する統合ログテーブル
+4つのログ種別（監査・アクセス・セキュリティ・ログイン試行）をサポート
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | log_id | bigint(20) | PRIMARY KEY AUTO_INCREMENT | ログID |
-| user_id | varchar(10) | FOREIGN KEY NOT NULL | 操作者ID |
-| table_name | varchar(50) | NOT NULL | 対象テーブル名 |
-| record_id | varchar(50) | NOT NULL | 対象レコードID |
-| action_type | enum('INSERT','UPDATE','DELETE') | NOT NULL | 操作種別 |
-| old_values | json | NULL | 変更前データ |
-| new_values | json | NULL | 変更後データ |
-| is_admin | boolean | DEFAULT false | 管理者フラグ |
-| created_at | timestamp | DEFAULT CURRENT_TIMESTAMP | 操作日時 |
+| log_type | enum('audit','login_attempt','access','security') | NOT NULL | ログ種別 |
+| user_id | varchar(8) | FOREIGN KEY | ユーザーID |
+| session_id | varchar(64) | NULL | セッションID |
+| **監査ログ用フィールド** |  |  |  |
+| table_name | varchar(50) | NULL | 対象テーブル名（監査ログ用） |
+| record_id | varchar(50) | NULL | 対象レコードID（監査ログ用） |
+| action_type | enum('INSERT','UPDATE','DELETE') | NULL | 操作種別（監査ログ用） |
+| old_values | json | NULL | 変更前データ（監査ログ用） |
+| new_values | json | NULL | 変更後データ（監査ログ用） |
+| **アクセスログ用フィールド** |  |  |  |
+| access_type | enum('login','logout','page_access','api_access','download','upload','error') | NULL | アクセス種別 |
+| page_url | varchar(500) | NULL | アクセスページURL |
+| page_name | varchar(100) | NULL | ページ名 |
+| http_method | enum('GET','POST','PUT','DELETE','PATCH') | NULL | HTTPメソッド |
+| request_params | json | NULL | リクエストパラメータ |
+| response_status | int(11) | NULL | レスポンスステータス |
+| response_time_ms | int(11) | NULL | レスポンス時間（ミリ秒） |
+| referer | varchar(500) | NULL | リファラー |
+| **セキュリティログ用フィールド** |  |  |  |
+| event_type | enum('login_success','login_failure','password_change','account_lock','permission_denied','suspicious_access','data_export','admin_access') | NULL | セキュリティイベント種別 |
+| severity | enum('low','medium','high','critical') | DEFAULT 'medium' | 重要度 |
+| target_resource | varchar(200) | NULL | 対象リソース |
+| failure_reason | varchar(200) | NULL | 失敗理由 |
+| **共通フィールド** |  |  |  |
+| description | text | NULL | イベント詳細・説明 |
 | ip_address | varchar(45) | NULL | IPアドレス |
 | user_agent | text | NULL | ユーザーエージェント |
-
-#### `login_attempts` テーブル（監査ログ）
-ログインの試行回数を管理
-
-| フィールド名 | データ型 | 制約 | 説明 |
-|-------------|----------|------|------|
-| id | bigint(20) | PRIMARY KEY NOT NULL AUTO_INCREMENT | ログID |
-| key_name | varchar(128) | NOT NULL | ユーザーID |
-| attempted | datetime | NOT NULL | 日時 |
+| facility_id | varchar(30) | NULL | 所属施設ID |
+| department_id | varchar(30) | NULL | 所属部署ID |
+| is_admin | boolean | DEFAULT false | 管理者フラグ |
+| additional_data | json | NULL | 追加データ・その他情報 |
+| created_at | datetime | DEFAULT CURRENT_TIMESTAMP | ログ記録日時 |
 
 ### 9. システム管理系
 
@@ -223,7 +247,7 @@ detail/control/relation_control.phpファイルに内容あり
 | created_at | timestamp | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | timestamp | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
 
-#### `kawasaki_university_facility` テーブル（マスタ）
+#### `kawasaki_university_facilities` テーブル（マスタ）
 川崎学園の病院情報を管理
 (附属病院、総合医療センター、高齢者医療センター)
 
@@ -233,17 +257,21 @@ detail/control/relation_control.phpファイルに内容あり
 | name | varchar(50) | NOT NULL | 施設名 |
 | formal_name | varchar(60) | NOT NULL | 正式名称 |
 | abbreviation | varchar(50) | NOT NULL | 略称 |
+| is_active | boolean | DEFAULT true | 有効フラグ |
+| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
 
-#### `kawasaki_university_department` テーブル（マスタ）
+#### `kawasaki_university_departments` テーブル（マスタ）
 川崎学園の部署情報を管理
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | department_id | varchar(20) | PRIMARY KEY FOREIGN KEY | 部署ID |
 | name | varchar(50) | NOT NULL | 部署名 |
+| is_active | boolean | DEFAULT true | 有効フラグ |
+| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
 
 ### 10. その他統合テーブル
-#### `intro` `invers_intro` テーブル（紹介データ）
+#### `introductions` テーブル（紹介データ）
 医療機関間の紹介情報を管理
 
 | フィールド名 | データ型 | 説明 |
@@ -274,7 +302,7 @@ detail/control/relation_control.phpファイルに内容あり
 | diagnostic_aid | varchar(50) | 診療支援区分 |
 | occ | varchar(30) | 職名 |
 
-#### `contact` テーブル（コンタクト履歴）
+#### `contacts` テーブル（コンタクト履歴）
 医療機関同士のコンタクト履歴を保管
 
 | フィールド名 | データ型 | 説明 |
