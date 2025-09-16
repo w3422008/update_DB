@@ -323,3 +323,40 @@ detail/control/relation_control.phpファイルに内容あり
 | detail | varchar(100) | 内容 |
 | notes | varchar(100) | 備考 |
 | data_department | varchar(50) | データ作成部署 |
+
+#### `inquire` テーブル（問い合わせ）
+システムに関する問い合わせ内容を管理
+
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| inquire_id | bigint(20) | PRIMARY KEY AUTO_INCREMENT | 問い合わせID |
+| user_id | varchar(8) | FOREIGN KEY | 問い合わせ者ユーザーID |
+| inquiry_type | enum('bug_report','feature_request','technical_support','general_inquiry','other') | NOT NULL | 問い合わせ種別 |
+| priority | enum('low','medium','high','urgent') | DEFAULT 'medium' | 優先度 |
+| status | enum('open','in_progress','resolved','closed') | DEFAULT 'open' | 対応状況 |
+| subject | varchar(200) | NOT NULL | 件名 |
+| description | text | NOT NULL | 問い合わせ内容詳細 |
+| category | varchar(100) | NULL | カテゴリ（医療機関管理、ユーザー管理など） |
+| reporter_email | varchar(254) | NULL | 問い合わせ者メールアドレス |
+| assigned_to | varchar(8) | FOREIGN KEY | 担当者ユーザーID |
+| resolution | text | NULL | 解決方法・回答内容 |
+| created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 問い合わせ日時 |
+| updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 最終更新日時 |
+| resolved_at | datetime | NULL | 解決日時 |
+
+**インデックス:**
+- `idx_user_id` (user_id)
+- `idx_status` (status)
+- `idx_priority` (priority)
+- `idx_created_at` (created_at)
+
+**外部キー制約:**
+- `user_id` → `users(user_id)`
+- `assigned_to` → `users(user_id)`
+
+**問い合わせ種別:**
+- `bug_report`: バグ報告
+- `feature_request`: 機能要望
+- `technical_support`: 技術サポート
+- `general_inquiry`: 一般的な問い合わせ
+- `other`: その他
