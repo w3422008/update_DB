@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>問い合わせ登録フォーム</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', 'Meiryo', sans-serif;
+      background: #f7f8fa;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 480px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 32px 28px 24px 28px;
+    }
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 18px;
+      color: #2a3b4d;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-bottom: 12px;
+      color: #34495e;
+      font-weight: 500;
+    }
+    input[type="text"],
+    input[type="email"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 8px 10px;
+      margin-top: 4px;
+      border: 1px solid #cfd8dc;
+      border-radius: 4px;
+      font-size: 1rem;
+      background: #f9fbfc;
+      box-sizing: border-box;
+      transition: border 0.2s;
+    }
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border: 1.5px solid #1976d2;
+      outline: none;
+      background: #fff;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+      max-height: 240px;
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    button[type="submit"] {
+      width: 100%;
+      background: #1976d2;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 4px;
+      padding: 12px 0;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.2s;
+    }
+    button[type="submit"]:hover {
+      background: #1256a3;
+    }
+    .note {
+      font-size: 0.95em;
+      color: #888;
+      margin-top: 18px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>問い合わせ登録フォーム</h1>
+    <form method="post" action="#">
+      <div class="form-group">
+        <label for="inquiry_type">問い合わせ種別</label>
+        <select name="inquiry_type" id="inquiry_type" required>
+          <option value="bug_report">バグ報告</option>
+          <option value="feature_request">機能要望</option>
+          <option value="technical_support">技術サポート</option>
+          <option value="general_inquiry">一般的な問い合わせ</option>
+          <option value="other">その他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="priority">優先度</label>
+        <select name="priority" id="priority">
+          <option value="low">低</option>
+          <option value="medium" selected>中</option>
+          <option value="high">高</option>
+          <option value="urgent">至急</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="subject">件名 <span style="color:#e53935">*</span></label>
+        <input type="text" name="subject" id="subject" maxlength="200" required>
+      </div>
+      <div class="form-group">
+        <label for="category">カテゴリ</label>
+        <input type="text" name="category" id="category" maxlength="100" placeholder="例: 医療機関管理、ユーザー管理など">
+      </div>
+      <div class="form-group">
+        <label for="description">問い合わせ内容詳細 <span style="color:#e53935">*</span></label>
+        <textarea name="description" id="description" rows="5" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="reporter_email">メールアドレス</label>
+        <input type="email" name="reporter_email" id="reporter_email" maxlength="254" placeholder="user@example.com">
+      </div>
+      <button type="submit">送信</button>
+    </form>
+    <div class="note">※ユーザーIDや担当者IDはシステム側で自動設定される場合があります。</div>
+  </div>
+</body>
+</html>

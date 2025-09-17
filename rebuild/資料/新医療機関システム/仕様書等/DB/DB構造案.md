@@ -279,11 +279,11 @@ detail/control/relation_control.phpファイルに内容あり
 | hospital_id | varchar(10) | 医療機関コード（複合主キー） |
 | user_id | varchar(8) | ユーザーID（複合主キー、これより附属病院、総合医療センターの情報を取得） |
 | intro_type | enum('intro','invers_intro') | DEFAULT 'intro' | 紹介・逆紹介判定 |
-| year | year(4) | 年度（複合主キー） |
+| year | year | 年度（複合主キー） |
 | date | date | 診療日（複合主キー） |
-| fie_name | varchar(30) | 診療科（複合主キー） |
-| fie_cd | int(11) | 診療科コード |
-| intr | int(11) | 紹介・逆紹介件数 |
+| department_name | varchar(30) | 診療科（複合主キー） |
+| department_id | int(11) | 診療科コード |
+| intro_count | int(11) | 紹介・逆紹介件数 |
 
 #### `training` テーブル（院外診療支援・研修情報）
 院外診療支援・研修情報を管理
@@ -291,7 +291,7 @@ detail/control/relation_control.phpファイルに内容あり
 | フィールド名 | データ型 | 説明 |
 |-------------|----------|------|
 | hospital_id | varchar(10) | 医療機関コード（複合主キー） |
-| year | year(4) | 年度（複合主キー） |
+| year | year | 年度（複合主キー） |
 | user_id | varchar(8) | ユーザーID（複合主キー、これより附属病院、総合医療センターの情報を取得） |
 | training_name | varchar(200) | 研修先医療機関名（複合主キー） |
 | department | varchar(60) | 診療科（複合主キー） |
@@ -331,32 +331,12 @@ detail/control/relation_control.phpファイルに内容あり
 |-------------|----------|------|------|
 | inquire_id | bigint(20) | PRIMARY KEY AUTO_INCREMENT | 問い合わせID |
 | user_id | varchar(8) | FOREIGN KEY | 問い合わせ者ユーザーID |
-| inquiry_type | enum('bug_report','feature_request','technical_support','general_inquiry','other') | NOT NULL | 問い合わせ種別 |
-| priority | enum('low','medium','high','urgent') | DEFAULT 'medium' | 優先度 |
+| priority | enum('general','urgent') | DEFAULT 'general' | 優先度 |
 | status | enum('open','in_progress','resolved','closed') | DEFAULT 'open' | 対応状況 |
 | subject | varchar(200) | NOT NULL | 件名 |
-| description | text | NOT NULL | 問い合わせ内容詳細 |
-| category | varchar(100) | NULL | カテゴリ（医療機関管理、ユーザー管理など） |
-| reporter_email | varchar(254) | NULL | 問い合わせ者メールアドレス |
+| description | text | NOT NULL | 問い合わせ内容 |
 | assigned_to | varchar(8) | FOREIGN KEY | 担当者ユーザーID |
 | resolution | text | NULL | 解決方法・回答内容 |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 問い合わせ日時 |
 | updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 最終更新日時 |
 | resolved_at | datetime | NULL | 解決日時 |
-
-**インデックス:**
-- `idx_user_id` (user_id)
-- `idx_status` (status)
-- `idx_priority` (priority)
-- `idx_created_at` (created_at)
-
-**外部キー制約:**
-- `user_id` → `users(user_id)`
-- `assigned_to` → `users(user_id)`
-
-**問い合わせ種別:**
-- `bug_report`: バグ報告
-- `feature_request`: 機能要望
-- `technical_support`: 技術サポート
-- `general_inquiry`: 一般的な問い合わせ
-- `other`: その他
