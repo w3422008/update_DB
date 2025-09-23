@@ -8,10 +8,10 @@
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY | 医療機関コード |
-| hospital_type_id | int(11) | FOREIGN KEY | 病院区分ID |
+| hospital_type_id | varchar(11) | FOREIGN KEY | 病院区分ID |
 | hospital_name | varchar(100) | NOT NULL | 医療機関名 |
 | status | enum('active','closed') | DEFAULT 'active' | 運営状況 |
-| bed | int(11) | NULL | 許可病床数 |
+| bed_count | int(11) | DEFAULT 0 | 許可病床数 |
 | has_pt | boolean | DEFAULT false | 理学療法士在籍フラグ |
 | has_ot | boolean | DEFAULT false | 作業療法士在籍フラグ |
 | has_st | boolean | DEFAULT false | 言語聴覚療法士在籍フラグ |
@@ -28,7 +28,7 @@
 | type_id | varchar(11) | PRIMARY KEY NOT NULL | 病院区分ID |
 | type_name | varchar(50) | NOT NULL | 区分名 |
 | is_active | boolean | DEFAULT true | 有効フラグ |
-| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
+| display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 #### `addresses` テーブル（住所情報）
 医療機関の住所情報を管理
@@ -36,7 +36,7 @@
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | address_id | int(11) | PRIMARY KEY AUTO_INCREMENT | 住所ID |
-| hospital_id | varchar(10) | FOREIGN KEY | 医療機関コード |
+| hospital_id | varchar(10) | FOREIGN KEY NOT NULL | 医療機関コード |
 | area_id | int(11) | FOREIGN KEY | 地区コード（areaテーブル参照） |
 | postal_code | varchar(7) | NULL | 郵便番号 |
 | street_number | varchar(200) | NULL | 番地 |
@@ -48,7 +48,7 @@
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | contact_id | int(11) | PRIMARY KEY AUTO_INCREMENT | 連絡先ID |
-| hospital_id | varchar(10) | FOREIGN KEY | 医療機関コード |
+| hospital_id | varchar(10) | FOREIGN KEY NOT NULL | 医療機関コード |
 | phone | varchar(20) | NULL | 電話番号 |
 | fax | varchar(20) | NULL | FAX番号 |
 | email | varchar(254) | NULL | メールアドレス |
@@ -68,7 +68,7 @@
 | ward_id | varchar(10) | PRIMARY KEY NOT NULL | 病棟種類ID |
 | ward_name | varchar(20) | NOT NULL | 病棟名 |
 | is_active | boolean | DEFAULT true | 有効フラグ |
-| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
+| display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 ### 2. 人員情報系
 
@@ -78,9 +78,9 @@
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | staff_id | int(11) | PRIMARY KEY AUTO_INCREMENT | スタッフ管理ID |
-| hospital_id | varchar(10) | FOREIGN KEY | 医療機関コード |
+| hospital_id | varchar(10) | FOREIGN KEY NOT NULL | 医療機関コード |
 | role_type | enum('chairman','director') | NOT NULL | 役職種別(chairman：理事長、director：病院長) |
-| name | varchar(60) | NOT NULL | 氏名 |
+| staff_name | varchar(60) | NOT NULL | 氏名 |
 | specialty | varchar(50) | NULL | 専門分野 |
 | graduation_year | year(4) | NULL | 卒業年度 |
 | alma_mater | varchar(100) | NULL | 出身校 |
@@ -112,15 +112,15 @@
 | department_name | varchar(100) | NOT NULL | 診療科名 |
 | category | varchar(100) | NOT NULL | 診療科カテゴリ名 |
 | is_active | boolean | DEFAULT true | 有効フラグ |
-| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
+| display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 #### `hospital_departments` テーブル（病院診療科関連）
 医療機関が対応している診療科を管理
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
-| department_id | int(11) | PRIMARY KEY(複合主キー) | 診療科ID |
+| hospital_id | varchar(10) | PRIMARY KEY(複合主キー) FOREIGN KEY | 医療機関コード |
+| department_id | varchar(10) | PRIMARY KEY(複合主キー) FOREIGN KEY | 診療科ID |
 
 ### 5. 診療内容系
 
@@ -134,15 +134,16 @@
 | service_category | varchar(100) | NULL | 診療部門 |
 | service_name | varchar(300) | NOT NULL | 診療内容名 |
 | is_active | boolean | DEFAULT true | 有効フラグ |
-| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
+| display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 #### `hospital_services` テーブル（病院診療内容関連）
 医療機関が提供している診療内容を管理
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
-| service_id | varchar(20) | PRIMARY KEY(複合主キー) | 診療内容ID |
+| hospital_id | varchar(10) | PRIMARY KEY(複合主キー) FOREIGN KEY | 医療機関コード |
+| service_code | varchar(10) | PRIMARY KEY(複合主キー) FOREIGN KEY | 診療内容コード |
+| service_division | varchar(100) | PRIMARY KEY(複合主キー) FOREIGN KEY | 診療区分 |
 
 #### `clinical_pathway_hospitals`テーブル（連携パスと医療機関を接続）
 地域連携クリニカルパスの存在有無を管理
@@ -160,7 +161,7 @@ detail/control/relation_control.phpファイルに内容あり
 | clinical_pathway_id | varchar(10) | PRIMARY KEY | 連携パスID |
 | path_name | varchar(30) | NOT NULL | 連携パス名 |
 | is_active | boolean | DEFAULT true | 有効フラグ |
-| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
+| display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 ### 6. 地域・エリア系
 
@@ -176,7 +177,7 @@ detail/control/relation_control.phpファイルに内容あり
 | ward | varchar(20) | NULL | 区 |
 | town | varchar(30) | NULL | 町 |
 | is_active | boolean | DEFAULT true | 有効フラグ |
-| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
+| display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 ### 7. 外部連携系
 
@@ -238,9 +239,9 @@ detail/control/relation_control.phpファイルに内容あり
 |-------------|----------|------|------|
 | user_id | varchar(8) | PRIMARY KEY | ユーザーID |
 | username | varchar(50) | NOT NULL | ユーザー名 |
-| pwd_hash | varchar(255) | NOT NULL | パスワードハッシュ |
-| facility_id | varchar(20) | NULL | 所属施設ID |
-| department_id | varchar(20) | NULL | 所属部署ID |
+| password_hash | varchar(255) | NOT NULL | パスワードハッシュ |
+| facility_id | varchar(20) | NOT NULL | 所属施設ID |
+| department_id | varchar(20) | NOT NULL | 所属部署ID |
 | role | enum('admin','editor','viewer') | DEFAULT 'viewer' | 権限レベル |
 | is_active | boolean | DEFAULT true | アカウント有効フラグ |
 | last_login_at | timestamp | NULL | 最終ログイン日時 |
@@ -253,76 +254,84 @@ detail/control/relation_control.phpファイルに内容あり
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| facility_id | varchar(20) | PRIMARY KEY FOREIGN KEY | 所属施設ID |
-| name | varchar(50) | NOT NULL | 施設名 |
+| facility_id | varchar(20) | PRIMARY KEY | 所属施設ID |
+| facility_name | varchar(50) | NOT NULL | 施設名 |
 | formal_name | varchar(60) | NOT NULL | 正式名称 |
-| abbreviation | varchar(50) | NOT NULL | 略称 |
+| abbreviation | varchar(50) | NULL | 略称 |
 | is_active | boolean | DEFAULT true | 有効フラグ |
-| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
+| display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 #### `kawasaki_university_departments` テーブル（マスタ）
 川崎学園の部署情報を管理
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| department_id | varchar(20) | PRIMARY KEY FOREIGN KEY | 部署ID |
-| name | varchar(50) | NOT NULL | 部署名 |
+| department_id | varchar(20) | PRIMARY KEY | 部署ID |
+| department_name | varchar(50) | NOT NULL | 部署名 |
 | is_active | boolean | DEFAULT true | 有効フラグ |
-| display_order | int(11) | AUTO_INCREMENT UNIQUE KEY | 表示順序 |
+| display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 ### 10. その他統合テーブル
 #### `introductions` テーブル（紹介データ）
 医療機関間の紹介情報を管理
 
-| フィールド名 | データ型 | 説明 |
-|-------------|----------|------|
-| hospital_id | varchar(10) | 医療機関コード（複合主キー） |
-| user_id | varchar(8) | ユーザーID（複合主キー、これより附属病院、総合医療センターの情報を取得） |
-| intro_type | enum('intro','invers_intro') | DEFAULT 'intro' | 紹介・逆紹介判定 |
-| year | year | 年度（複合主キー） |
-| date | date | 診療日（複合主キー） |
-| department_name | varchar(30) | 診療科（複合主キー） |
-| department_id | int(11) | 診療科コード |
-| intro_count | int(11) | 紹介・逆紹介件数 |
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
+| user_id | varchar(8) | PRIMARY KEY(複合主キー) | ユーザーID（これより附属病院、総合医療センターの情報を取得） |
+| year | year | PRIMARY KEY(複合主キー) | 年度 |
+| date | date | PRIMARY KEY(複合主キー) | 診療日 |
+| department_name | varchar(30) | PRIMARY KEY(複合主キー) | 診療科 |
+| intro_type | enum('intro','invers_intro') | PRIMARY KEY(複合主キー) DEFAULT 'intro' | 紹介・逆紹介判定 |
+| department_id | varchar(10) | NULL | 診療科コード |
+| intro_count | int(11) | NOT NULL | 紹介・逆紹介件数 |
 
 #### `training` テーブル（院外診療支援・研修情報）
 院外診療支援・研修情報を管理
 
-| フィールド名 | データ型 | 説明 |
-|-------------|----------|------|
-| hospital_id | varchar(10) | 医療機関コード（複合主キー） |
-| year | year | 年度（複合主キー） |
-| user_id | varchar(8) | ユーザーID（複合主キー、これより附属病院、総合医療センターの情報を取得） |
-| training_name | varchar(200) | 研修先医療機関名（複合主キー） |
-| department | varchar(60) | 診療科（複合主キー） |
-| name | varchar(60) | 氏名（複合主キー） |
-| start_date | date | 診療支援開始日（複合主キー） |
-| end_date | date | 診療支援終了日（複合主キー） |
-| date | varchar(300) | 日付 |
-| diagnostic_aid | varchar(50) | 診療支援区分 |
-| occ | varchar(30) | 職名 |
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
+| year | year | PRIMARY KEY(複合主キー) | 年度 |
+| user_id | varchar(8) | PRIMARY KEY(複合主キー) | ユーザーID（これより附属病院、総合医療センターの情報を取得） |
+| training_name | varchar(200) | PRIMARY KEY(複合主キー) | 研修先医療機関名 |
+| department | varchar(60) | PRIMARY KEY(複合主キー) | 診療科 |
+| staff_name | varchar(60) | PRIMARY KEY(複合主キー) | 氏名 |
+| position_id | varchar(20) | NULL | 職名 |
+| start_date | date | PRIMARY KEY(複合主キー) | 診療支援開始日 |
+| end_date | date | PRIMARY KEY(複合主キー) | 診療支援終了日 |
+| date | varchar(300) | NULL | 日付 |
+| diagnostic_aid | varchar(50) | NULL | 診療支援区分 |
+
+#### `positions` テーブル（職名マスタ）
+職業のマスタテーブル
+
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| position_id | varchar(20) | PRIMARY KEY | 診療科 |
+| position_name | varchar(60) | NOT NULL | 氏名 |
 
 #### `contacts` テーブル（コンタクト履歴）
 医療機関同士のコンタクト履歴を保管
 
-| フィールド名 | データ型 | 説明 |
-|-------------|----------|------|
-| hos_cd | varchar(10) | 医療機関コード（複合主キー） |
-| hos_name | varchar(100) | 医療機関名 |
-| year | year(4) | 年度（複合主キー） |
-| user_id | varchar(8) | ユーザーID（複合主キー、これより附属病院、総合医療センターの情報を取得） |
-| date | date | 日付（複合主キー） |
-| method | varchar(50) | 方法（来院、訪問、オンライン等）（複合主キー） |
-| ex_department | varchar(50) | 連携機関対応者部署 |
-| ex_position | varchar(50) | 連携機関対応者役職 |
-| ex_name | varchar(10) | 連携機関対応者氏名（複合主キー） |
-| ex_subnames | varchar(100) | 連携機関対応人数・氏名 |
-| in_department | varchar(50) | 当院対応者所属 |
-| in_name | varchar(10) | 当院対応者氏名（複合主キー） |
-| in_subnames | varchar(100) | 当院対応人数・氏名 |
-| detail | varchar(100) | 内容 |
-| notes | varchar(100) | 備考 |
-| data_department | varchar(50) | データ作成部署 |
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
+| year | year(4) | PRIMARY KEY(複合主キー) | 年度 |
+| user_id | varchar(8) | PRIMARY KEY(複合主キー) | ユーザーID（これより附属病院、総合医療センターの情報を取得） |
+| date | date | PRIMARY KEY(複合主キー) | 日付 |
+| method | varchar(50) | PRIMARY KEY(複合主キー) | 方法（来院、訪問、オンライン等） |
+| external_contact_name | varchar(10) | PRIMARY KEY(複合主キー) | 連携機関対応者氏名 |
+| internal_contact_name | varchar(10) | PRIMARY KEY(複合主キー) | 当院対応者氏名 |
+| hospital_name | varchar(100) | NULL | 医療機関名 |
+| external_department | varchar(50) | NULL | 連携機関対応者部署 |
+| external_position | varchar(50) | NULL | 連携機関対応者役職 |
+| external_additional_participants | varchar(100) | NULL | 連携機関対応人数・氏名 |
+| internal_department | varchar(50) | NULL | 当院対応者所属 |
+| internal_additional_participants | varchar(100) | NULL | 当院対応人数・氏名 |
+| detail | varchar(100) | NULL | 内容 |
+| notes | varchar(100) | NULL | 備考 |
+| data_department | varchar(50) | NULL | データ作成部署 |
 
 #### `inquire` テーブル（問い合わせ）
 システムに関する問い合わせ内容を管理
