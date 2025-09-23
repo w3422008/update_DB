@@ -310,6 +310,8 @@ detail/control/relation_control.phpファイルに内容あり
 |-------------|----------|------|------|
 | position_id | varchar(20) | PRIMARY KEY | 診療科 |
 | position_name | varchar(60) | NOT NULL | 氏名 |
+| is_active | boolean | DEFAULT true | 有効フラグ |
+| display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 #### `contacts` テーブル（コンタクト履歴）
 医療機関同士のコンタクト履歴を保管

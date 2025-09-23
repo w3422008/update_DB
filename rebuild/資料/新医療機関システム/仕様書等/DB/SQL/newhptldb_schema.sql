@@ -19,10 +19,10 @@ CREATE TABLE hospital_types (
 DROP TABLE IF EXISTS hospitals;
 CREATE TABLE hospitals (
     hospital_id varchar(10) PRIMARY KEY COMMENT '医療機関コード',
-    hospital_type_id int(11) COMMENT '病院区分ID',
+    hospital_type_id varchar(11) COMMENT '病院区分ID',
     hospital_name varchar(100) NOT NULL COMMENT '医療機関名',
     status enum('active','closed') DEFAULT 'active' COMMENT '運営状況',
-    bed int(11) COMMENT '許可病床数',
+    bed_count int(11) DEFAULT 0 COMMENT '許可病床数',
     has_pt boolean DEFAULT false COMMENT '理学療法士在籍フラグ',
     has_ot boolean DEFAULT false COMMENT '作業療法士在籍フラグ',
     has_st boolean DEFAULT false COMMENT '言語聴覚療法士在籍フラグ',
@@ -91,7 +91,7 @@ CREATE TABLE hospital_staffs (
     staff_id int(11) PRIMARY KEY AUTO_INCREMENT COMMENT 'スタッフ管理ID',
     hospital_id varchar(10) COMMENT '医療機関コード',
     role_type enum('chairman','director') NOT NULL COMMENT '役職種別（理事長・病院長）',
-    name varchar(60) NOT NULL COMMENT '氏名',
+    staff_name varchar(60) NOT NULL COMMENT '氏名',
     specialty varchar(50) COMMENT '専門分野',
     graduation_year year(4) COMMENT '卒業年度',
     alma_mater varchar(100) COMMENT '出身校',
@@ -186,7 +186,7 @@ CREATE TABLE carna_connects (
 DROP TABLE IF EXISTS kawasaki_university_facilities;
 CREATE TABLE kawasaki_university_facilities (
     facility_id varchar(30) PRIMARY KEY COMMENT '所属施設ID',
-    name varchar(50) NOT NULL COMMENT '施設名',
+    facility_name varchar(50) NOT NULL COMMENT '施設名',
     formal_name varchar(60) NOT NULL COMMENT '正式名称',
     abbreviation varchar(50) NOT NULL COMMENT '略称',
     is_active boolean DEFAULT true COMMENT '有効フラグ',
@@ -196,7 +196,7 @@ CREATE TABLE kawasaki_university_facilities (
 DROP TABLE IF EXISTS kawasaki_university_departments;
 CREATE TABLE kawasaki_university_departments (
     department_id varchar(30) PRIMARY KEY COMMENT '部署ID',
-    name varchar(50) NOT NULL COMMENT '部署名',
+    department_name varchar(50) NOT NULL COMMENT '部署名',
     is_active boolean DEFAULT true COMMENT '有効フラグ',
     display_order int(11) AUTO_INCREMENT UNIQUE KEY COMMENT '表示順序'
 ) COMMENT = '川崎学園の部署情報を管理';
@@ -204,8 +204,8 @@ CREATE TABLE kawasaki_university_departments (
 DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     user_id varchar(8) PRIMARY KEY COMMENT 'ユーザーID',
-    user_name varchar(50) NOT NULL COMMENT 'ユーザー名',
-    pwd_hash varchar(255) NOT NULL COMMENT 'パスワードハッシュ',
+    username varchar(50) NOT NULL COMMENT 'ユーザー名',
+    password_hash varchar(255) NOT NULL COMMENT 'パスワードハッシュ',
     facility_id varchar(30) COMMENT '所属施設',
     department_id varchar(30) COMMENT '所属部署',
     role enum('admin','editor','viewer') COMMENT '権限レベル',
@@ -285,6 +285,15 @@ CREATE TABLE introductions (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 ) COMMENT = '医療機関間の紹介・逆紹介情報を管理';
 
+-- 職名マスタテーブルを追加
+DROP TABLE IF EXISTS positions;
+CREATE TABLE positions (
+    position_id varchar(20) PRIMARY KEY COMMENT '職名ID',
+    position_name varchar(60) NOT NULL COMMENT '職名',
+    is_active boolean DEFAULT true COMMENT '有効フラグ',
+    display_order int(11) NOT NULL DEFAULT 0 COMMENT '表示順序'
+) COMMENT = '職名マスタテーブル';
+
 DROP TABLE IF EXISTS training;
 CREATE TABLE training (
     hospital_id varchar(10) COMMENT '医療機関コード',
@@ -292,13 +301,15 @@ CREATE TABLE training (
     year year(4) COMMENT '年度',
     training_name varchar(200) COMMENT '研修先医療機関名',
     department varchar(60) COMMENT '診療科',
-    name varchar(60) COMMENT '氏名',
+    staff_name varchar(60) COMMENT '氏名',
     start_date date COMMENT '診療支援開始日',
     end_date date COMMENT '診療支援終了日',
     date varchar(300) COMMENT '日付',
     diagnostic_aid varchar(50) COMMENT '診療支援区分',
-    occ varchar(30) COMMENT '職名',
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    position varchar(30) COMMENT '職名',
+    position_id varchar(20) COMMENT '職名ID',
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (position_id) REFERENCES positions(position_id)
 ) COMMENT = '院外診療支援・研修情報を管理';
 
 DROP TABLE IF EXISTS contacts;
@@ -309,13 +320,13 @@ CREATE TABLE contacts (
     year year(4) COMMENT '年度',
     date date COMMENT '日付',
     method varchar(50) COMMENT '方法',
-    ex_department varchar(50) COMMENT '連携機関対応者部署',
-    ex_position varchar(50) COMMENT '連携機関対応者役職',
-    ex_name varchar(10) COMMENT '連携機関対応者氏名',
-    ex_subnames varchar(100) COMMENT '連携機関対応人数・氏名',
-    in_department varchar(50) COMMENT '当院対応者所属',
-    in_name varchar(10) COMMENT '当院対応者氏名',
-    in_subnames varchar(100) COMMENT '当院対応人数・氏名',
+    external_department varchar(50) COMMENT '連携機関対応者部署',
+    external_position varchar(50) COMMENT '連携機関対応者役職',
+    external_contact_name varchar(10) COMMENT '連携機関対応者氏名',
+    external_additional_participants varchar(100) COMMENT '連携機関対応人数・氏名',
+    internal_department varchar(50) COMMENT '当院対応者所属',
+    internal_contact_name varchar(10) COMMENT '当院対応者氏名',
+    internal_additional_participants varchar(100) COMMENT '当院対応人数・氏名',
     detail varchar(100) COMMENT '内容',
     notes varchar(100) COMMENT '備考',
     data_department varchar(50) COMMENT 'データ部署',
@@ -337,7 +348,7 @@ FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, created_at)
     VALUES ('audit', 'hospitals', NEW.hospital_id, 'INSERT', 
             JSON_OBJECT('hospital_id', NEW.hospital_id, 'hospital_type_id', NEW.hospital_type_id, 
-                       'hospital_name', NEW.hospital_name, 'status', NEW.status, 'bed', NEW.bed, 
+                       'hospital_name', NEW.hospital_name, 'status', NEW.status, 'bed_count', NEW.bed_count, 
                        'notes', NEW.notes, 'created_at', NEW.created_at, 'updated_at', NEW.updated_at),
             NOW());
 END$$
@@ -347,10 +358,10 @@ FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, created_at)
     VALUES ('audit', 'hospitals', NEW.hospital_id, 'UPDATE',
             JSON_OBJECT('hospital_id', OLD.hospital_id, 'hospital_type_id', OLD.hospital_type_id, 
-                       'hospital_name', OLD.hospital_name, 'status', OLD.status, 'bed', OLD.bed, 
+                       'hospital_name', OLD.hospital_name, 'status', OLD.status, 'bed_count', OLD.bed_count, 
                        'notes', OLD.notes, 'created_at', OLD.created_at, 'updated_at', OLD.updated_at),
             JSON_OBJECT('hospital_id', NEW.hospital_id, 'hospital_type_id', NEW.hospital_type_id, 
-                       'hospital_name', NEW.hospital_name, 'status', NEW.status, 'bed', NEW.bed, 
+                       'hospital_name', NEW.hospital_name, 'status', NEW.status, 'bed_count', NEW.bed_count, 
                        'notes', NEW.notes, 'created_at', NEW.created_at, 'updated_at', NEW.updated_at),
             NOW());
 END$$
@@ -360,7 +371,7 @@ FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
     VALUES ('audit', 'hospitals', OLD.hospital_id, 'DELETE',
             JSON_OBJECT('hospital_id', OLD.hospital_id, 'hospital_type_id', OLD.hospital_type_id, 
-                       'hospital_name', OLD.hospital_name, 'status', OLD.status, 'bed', OLD.bed, 
+                       'hospital_name', OLD.hospital_name, 'status', OLD.status, 'bed_count', OLD.bed_count, 
                        'notes', OLD.notes, 'created_at', OLD.created_at, 'updated_at', OLD.updated_at),
             NOW());
 END$$
@@ -370,7 +381,7 @@ CREATE TRIGGER users_insert_audit AFTER INSERT ON users
 FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, user_id, created_at)
     VALUES ('audit', 'users', NEW.user_id, 'INSERT', 
-            JSON_OBJECT('user_id', NEW.user_id, 'user_name', NEW.user_name, 'facility_id', NEW.facility_id, 
+            JSON_OBJECT('user_id', NEW.user_id, 'username', NEW.username, 'facility_id', NEW.facility_id, 
                        'department_id', NEW.department_id, 'role', NEW.role, 'is_active', NEW.is_active,
                        'created_at', NEW.created_at, 'updated_at', NEW.updated_at, 'last_login_at', NEW.last_login_at),
             NEW.user_id, NOW());
@@ -380,10 +391,10 @@ CREATE TRIGGER users_update_audit AFTER UPDATE ON users
 FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, user_id, created_at)
     VALUES ('audit', 'users', NEW.user_id, 'UPDATE',
-            JSON_OBJECT('user_id', OLD.user_id, 'user_name', OLD.user_name, 'facility_id', OLD.facility_id, 
+            JSON_OBJECT('user_id', OLD.user_id, 'username', OLD.username, 'facility_id', OLD.facility_id, 
                        'department_id', OLD.department_id, 'role', OLD.role, 'is_active', OLD.is_active,
                        'created_at', OLD.created_at, 'updated_at', OLD.updated_at, 'last_login_at', OLD.last_login_at),
-            JSON_OBJECT('user_id', NEW.user_id, 'user_name', NEW.user_name, 'facility_id', NEW.facility_id, 
+            JSON_OBJECT('user_id', NEW.user_id, 'username', NEW.username, 'facility_id', NEW.facility_id, 
                        'department_id', NEW.department_id, 'role', NEW.role, 'is_active', NEW.is_active,
                        'created_at', NEW.created_at, 'updated_at', NEW.updated_at, 'last_login_at', NEW.last_login_at),
             NEW.user_id, NOW());
@@ -393,7 +404,7 @@ CREATE TRIGGER users_delete_audit AFTER DELETE ON users
 FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
     VALUES ('audit', 'users', OLD.user_id, 'DELETE',
-            JSON_OBJECT('user_id', OLD.user_id, 'user_name', OLD.user_name, 'facility_id', OLD.facility_id, 
+            JSON_OBJECT('user_id', OLD.user_id, 'username', OLD.username, 'facility_id', OLD.facility_id, 
                        'department_id', OLD.department_id, 'role', OLD.role, 'is_active', OLD.is_active,
                        'created_at', OLD.created_at, 'updated_at', OLD.updated_at, 'last_login_at', OLD.last_login_at),
             NOW());
@@ -435,7 +446,7 @@ FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, created_at)
     VALUES ('audit', 'hospital_staffs', NEW.staff_id, 'INSERT', 
             JSON_OBJECT('staff_id', NEW.staff_id, 'hospital_id', NEW.hospital_id, 'role_type', NEW.role_type, 
-                       'name', NEW.name, 'specialty', NEW.specialty, 'graduation_year', NEW.graduation_year, 
+                       'staff_name', NEW.staff_name, 'specialty', NEW.specialty, 'graduation_year', NEW.graduation_year, 
                        'alma_mater', NEW.alma_mater, 'notes', NEW.notes),
             NOW());
 END$$
@@ -445,10 +456,10 @@ FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, created_at)
     VALUES ('audit', 'hospital_staffs', NEW.staff_id, 'UPDATE',
             JSON_OBJECT('staff_id', OLD.staff_id, 'hospital_id', OLD.hospital_id, 'role_type', OLD.role_type, 
-                       'name', OLD.name, 'specialty', OLD.specialty, 'graduation_year', OLD.graduation_year, 
+                       'staff_name', OLD.staff_name, 'specialty', OLD.specialty, 'graduation_year', OLD.graduation_year, 
                        'alma_mater', OLD.alma_mater, 'notes', OLD.notes),
             JSON_OBJECT('staff_id', NEW.staff_id, 'hospital_id', NEW.hospital_id, 'role_type', NEW.role_type, 
-                       'name', NEW.name, 'specialty', NEW.specialty, 'graduation_year', NEW.graduation_year, 
+                       'staff_name', NEW.staff_name, 'specialty', NEW.specialty, 'graduation_year', NEW.graduation_year, 
                        'alma_mater', NEW.alma_mater, 'notes', NEW.notes),
             NOW());
 END$$
@@ -458,7 +469,7 @@ FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
     VALUES ('audit', 'hospital_staffs', OLD.staff_id, 'DELETE',
             JSON_OBJECT('staff_id', OLD.staff_id, 'hospital_id', OLD.hospital_id, 'role_type', OLD.role_type, 
-                       'name', OLD.name, 'specialty', OLD.specialty, 'graduation_year', OLD.graduation_year, 
+                       'staff_name', OLD.staff_name, 'specialty', OLD.specialty, 'graduation_year', OLD.graduation_year, 
                        'alma_mater', OLD.alma_mater, 'notes', OLD.notes),
             NOW());
 END$$
@@ -534,7 +545,7 @@ ORDER BY access_date DESC, access_type;
 CREATE VIEW security_alerts AS
 SELECT 
     ul.*,
-    u.user_name,
+    u.username,
     u.facility_id,
     u.department_id
 FROM unified_logs ul
@@ -548,7 +559,7 @@ ORDER BY ul.created_at DESC;
 CREATE VIEW user_activity AS
 SELECT 
     u.user_id,
-    u.user_name,
+    u.username,
     u.facility_id,
     u.department_id,
     COUNT(DISTINCT DATE(ul.created_at)) as active_days,
@@ -559,7 +570,7 @@ FROM users u
 LEFT JOIN unified_logs ul ON u.user_id = ul.user_id 
 WHERE ul.log_type = 'access'
    AND ul.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-GROUP BY u.user_id, u.user_name, u.facility_id, u.department_id
+GROUP BY u.user_id, u.username, u.facility_id, u.department_id
 ORDER BY last_access DESC;
 
 -- ログイン試行統計ビュー
