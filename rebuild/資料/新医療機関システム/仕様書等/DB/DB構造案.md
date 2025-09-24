@@ -16,8 +16,8 @@
 | has_ot | boolean | DEFAULT false | 作業療法士在籍フラグ |
 | has_st | boolean | DEFAULT false | 言語聴覚療法士在籍フラグ |
 | notes | text | NULL | 備考（基本情報） |
-| created_at | timestamp | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
-| updated_at | timestamp | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
+| created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
 
 #### `hospital_types` テーブル（病院区分マスタ）
 病院の種別を管理するマスタテーブル
@@ -129,7 +129,7 @@
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| service_code | varchar(10) | PRIMARY KEY(複合主キー) NOT NULL | 診療内容コード |
+| service_id | varchar(10) | PRIMARY KEY(複合主キー) NOT NULL | 診療内容コード |
 | service_division | varchar(100) | PRIMARY KEY(複合主キー) NOT NULL | 診療区分 |
 | service_category | varchar(100) | NULL | 診療部門 |
 | service_name | varchar(300) | NOT NULL | 診療内容名 |
@@ -142,7 +142,7 @@
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) FOREIGN KEY | 医療機関コード |
-| service_code | varchar(10) | PRIMARY KEY(複合主キー) FOREIGN KEY | 診療内容コード |
+| service_id | varchar(10) | PRIMARY KEY(複合主キー) FOREIGN KEY | 診療内容コード |
 | service_division | varchar(100) | PRIMARY KEY(複合主キー) FOREIGN KEY | 診療区分 |
 
 #### `clinical_pathway_hospitals`テーブル（連携パスと医療機関を接続）
@@ -223,10 +223,6 @@ detail/control/relation_control.phpファイルに内容あり
 | **共通フィールド** |  |  |  |
 | description | text | NULL | イベント詳細・説明 |
 | ip_address | varchar(45) | NULL | IPアドレス |
-| user_agent | text | NULL | ユーザーエージェント |
-| facility_id | varchar(30) | NULL | 所属施設ID |
-| department_id | varchar(30) | NULL | 所属部署ID |
-| is_admin | boolean | DEFAULT false | 管理者フラグ |
 | additional_data | json | NULL | 追加データ・その他情報 |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | ログ記録日時 |
 
@@ -238,15 +234,15 @@ detail/control/relation_control.phpファイルに内容あり
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | user_id | varchar(8) | PRIMARY KEY | ユーザーID |
-| username | varchar(50) | NOT NULL | ユーザー名 |
+| user_name | varchar(50) | NOT NULL | ユーザー名 |
 | password_hash | varchar(255) | NOT NULL | パスワードハッシュ |
 | facility_id | varchar(20) | NOT NULL | 所属施設ID |
 | department_id | varchar(20) | NOT NULL | 所属部署ID |
 | role | enum('admin','editor','viewer') | DEFAULT 'viewer' | 権限レベル |
 | is_active | boolean | DEFAULT true | アカウント有効フラグ |
-| last_login_at | timestamp | NULL | 最終ログイン日時 |
-| created_at | timestamp | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
-| updated_at | timestamp | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
+| last_login_at | datetime | NULL | 最終ログイン日時 |
+| created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
 
 #### `kawasaki_university_facilities` テーブル（マスタ）
 川崎学園の病院情報を管理
@@ -286,20 +282,19 @@ detail/control/relation_control.phpファイルに内容あり
 | department_id | varchar(10) | NULL | 診療科コード |
 | intro_count | int(11) | NOT NULL | 紹介・逆紹介件数 |
 
-#### `training` テーブル（院外診療支援・研修情報）
-院外診療支援・研修情報を管理
+#### `training` テーブル（兼業データ）
+複数の医療機関へ研修・勤務している人物を管理
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
 | year | year | PRIMARY KEY(複合主キー) | 年度 |
 | user_id | varchar(8) | PRIMARY KEY(複合主キー) | ユーザーID（これより附属病院、総合医療センターの情報を取得） |
-| training_name | varchar(200) | PRIMARY KEY(複合主キー) | 研修先医療機関名 |
 | department | varchar(60) | PRIMARY KEY(複合主キー) | 診療科 |
-| staff_name | varchar(60) | PRIMARY KEY(複合主キー) | 氏名 |
-| position_id | varchar(20) | NULL | 職名 |
+| staff_name | varchar(60) | NOT NULL | 氏名 |
+| position_id | varchar(20) | FOREIGN KEY | 職名 |
 | start_date | date | PRIMARY KEY(複合主キー) | 診療支援開始日 |
-| end_date | date | PRIMARY KEY(複合主キー) | 診療支援終了日 |
+| end_date | date | NULL | 診療支援終了日 |
 | date | varchar(300) | NULL | 日付 |
 | diagnostic_aid | varchar(50) | NULL | 診療支援区分 |
 
@@ -323,19 +318,18 @@ detail/control/relation_control.phpファイルに内容あり
 | user_id | varchar(8) | PRIMARY KEY(複合主キー) | ユーザーID（これより附属病院、総合医療センターの情報を取得） |
 | date | date | PRIMARY KEY(複合主キー) | 日付 |
 | method | varchar(50) | PRIMARY KEY(複合主キー) | 方法（来院、訪問、オンライン等） |
-| external_contact_name | varchar(10) | PRIMARY KEY(複合主キー) | 連携機関対応者氏名 |
-| internal_contact_name | varchar(10) | PRIMARY KEY(複合主キー) | 当院対応者氏名 |
-| hospital_name | varchar(100) | NULL | 医療機関名 |
+| external_contact_name | varchar(10) | NOT NULL | 連携機関対応者氏名 |
 | external_department | varchar(50) | NULL | 連携機関対応者部署 |
 | external_position | varchar(50) | NULL | 連携機関対応者役職 |
 | external_additional_participants | varchar(100) | NULL | 連携機関対応人数・氏名 |
+| internal_contact_name | varchar(10) | NOT NULL | 当院対応者氏名 |
 | internal_department | varchar(50) | NULL | 当院対応者所属 |
 | internal_additional_participants | varchar(100) | NULL | 当院対応人数・氏名 |
 | detail | varchar(100) | NULL | 内容 |
 | notes | varchar(100) | NULL | 備考 |
 | data_department | varchar(50) | NULL | データ作成部署 |
 
-#### `inquire` テーブル（問い合わせ）
+#### `inquires` テーブル（問い合わせ）
 システムに関する問い合わせ内容を管理
 
 | フィールド名 | データ型 | 制約 | 説明 |
@@ -344,10 +338,103 @@ detail/control/relation_control.phpファイルに内容あり
 | user_id | varchar(8) | FOREIGN KEY | 問い合わせ者ユーザーID |
 | priority | enum('general','urgent') | DEFAULT 'general' | 優先度 |
 | status | enum('open','in_progress','resolved','closed') | DEFAULT 'open' | 対応状況 |
-| subject | varchar(200) | NOT NULL | 件名 |
 | description | text | NOT NULL | 問い合わせ内容 |
 | assigned_to | varchar(8) | FOREIGN KEY | 担当者ユーザーID |
 | resolution | text | NULL | 解決方法・回答内容 |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 問い合わせ日時 |
 | updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 最終更新日時 |
 | resolved_at | datetime | NULL | 解決日時 |
+
+### 11. システム運営管理系
+
+#### `maintenance_notifications` テーブル（メンテナンス通知管理）
+システムメンテナンスの事前通知と実行中通知を統合管理
+
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| notification_id | int(11) | PRIMARY KEY AUTO_INCREMENT | 通知ID |
+| notification_type | enum('scheduled','in_progress','completed','cancelled') | NOT NULL | 通知種別（予定・実行中・完了・中止） |
+| title | text | NOT NULL | タイトル |
+| description | text | NULL | 詳細説明・実施内容 |
+| upload_date | datetime | NOT NULL | 通知作成日 |
+| scheduled_date | datetime | NOT NULL | 予定作業日 |
+| start_time | time | NULL | 予定開始時刻 |
+| end_time | time | NULL | 予定終了時刻 |
+| actual_start_time | time | NULL | 実際の開始時刻 |
+| actual_end_time | time | NULL | 実際の終了時刻 |
+| **メンテナンス制御フィールド** |  |  |  |
+| auto_start | boolean | DEFAULT false | 自動開始フラグ |
+| auto_end | boolean | DEFAULT false | 自動終了フラグ |
+| maintenance_mode | enum('none','read_only','full_stop') | DEFAULT 'none' | メンテナンスモード |
+| affected_services | json | NULL | 影響を受けるサービス一覧 |
+| rollback_plan | text | NULL | ロールバック手順 |
+| approval_status | enum('pending','approved','rejected') | DEFAULT 'pending' | 承認状況 |
+| approved_by | varchar(8) | FOREIGN KEY | 承認者ユーザーID |
+| approved_at | datetime | NULL | 承認日時 |
+| **通知・表示制御** |  |  |  |
+| is_visible | boolean | DEFAULT true | 表示フラグ |
+| notification_level | enum('info','warning','critical') | DEFAULT 'info' | 通知レベル |
+| target_users | json | NULL | 通知対象ユーザー（NULL=全員） |
+| created_by | varchar(8) | FOREIGN KEY | 作成者ユーザーID |
+| created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
+
+#### `maintenance_execution_logs` テーブル（メンテナンス実行ログ）
+メンテナンス実行時の詳細なログとステータスを管理
+
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| log_id | bigint(20) | PRIMARY KEY AUTO_INCREMENT | ログID |
+| notification_id | int(11) | FOREIGN KEY NOT NULL | 通知ID |
+| execution_step | enum('preparation','start','execution','completion','rollback','error') | NOT NULL | 実行ステップ |
+| step_status | enum('pending','in_progress','success','failed','skipped') | NOT NULL | ステップ状況 |
+| step_description | varchar(500) | NOT NULL | ステップ説明 |
+| execution_command | text | NULL | 実行コマンド・処理内容 |
+| execution_result | text | NULL | 実行結果・出力 |
+| error_message | text | NULL | エラーメッセージ |
+| executed_by | varchar(8) | FOREIGN KEY | 実行者ユーザーID |
+| execution_duration_ms | int(11) | NULL | 実行時間（ミリ秒） |
+| system_status_before | json | NULL | 実行前システム状態 |
+| system_status_after | json | NULL | 実行後システム状態 |
+| created_at | datetime | DEFAULT CURRENT_TIMESTAMP | ログ記録日時 |
+
+#### `system_status` テーブル（システム状態管理）
+現在のシステムの稼働状態とメンテナンス状況を管理
+
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| status_id | int(11) | PRIMARY KEY AUTO_INCREMENT | 状態ID |
+| system_mode | enum('normal','maintenance','emergency','read_only') | DEFAULT 'normal' | システムモード |
+| maintenance_notification_id | int(11) | FOREIGN KEY | 関連メンテナンス通知ID |
+| status_message | varchar(500) | NULL | 状態メッセージ |
+| affected_features | json | NULL | 影響を受ける機能一覧 |
+| estimated_recovery_time | datetime | NULL | 復旧予定時刻 |
+| last_health_check | datetime | NULL | 最終ヘルスチェック時刻 |
+| health_check_result | json | NULL | ヘルスチェック結果 |
+| changed_by | varchar(8) | FOREIGN KEY | 状態変更者ユーザーID |
+| created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
+
+#### `system_messages` テーブル（システム更新履歴・要望管理）
+システムの更新履歴、機能要望、バグ報告を管理
+
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| message_id | int(11) | PRIMARY KEY AUTO_INCREMENT | メッセージID |
+| message_type | enum('feature_request','bug_report','update_log','announcement') | DEFAULT 'update_log' | メッセージ種別 |
+| priority | enum('low','normal','high','urgent') | DEFAULT 'normal' | 優先度 |
+| status | enum('open','in_progress','testing','completed','rejected') | DEFAULT 'open' | 対応状況 |
+| title | varchar(200) | NOT NULL | タイトル・概要 |
+| description | text | NOT NULL | 詳細内容 |
+| request_date | datetime | NOT NULL | 依頼日・報告日 |
+| response_date | datetime | NULL | 対応完了日 |
+| requester_facility | varchar(20) | FOREIGN KEY | 依頼者施設ID |
+| requester_department | varchar(20) | FOREIGN KEY | 依頼者部署ID |
+| requester_name | varchar(60) | NULL | 依頼者氏名 |
+| assigned_to | varchar(8) | FOREIGN KEY | 担当者ユーザーID |
+| version | varchar(50) | NULL | 対応バージョン |
+| is_visible | boolean | DEFAULT true | 表示フラグ |
+| created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
+
+

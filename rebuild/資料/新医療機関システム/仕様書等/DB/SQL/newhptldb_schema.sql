@@ -12,7 +12,7 @@ CREATE TABLE hospital_types (
     type_id varchar(11) PRIMARY KEY NOT NULL COMMENT '病院区分ID',
     type_name varchar(50) NOT NULL COMMENT '区分名',
     is_active boolean DEFAULT true COMMENT '有効フラグ',
-    display_order int(11) AUTO_INCREMENT UNIQUE KEY COMMENT '表示順序'
+    display_order int(11) NOT NULL DEFAULT 0 COMMENT '表示順序'
 ) COMMENT = '病院の種別を管理するマスタテーブル（病院、特定機能病院など）';
 
 
@@ -27,8 +27,8 @@ CREATE TABLE hospitals (
     has_ot boolean DEFAULT false COMMENT '作業療法士在籍フラグ',
     has_st boolean DEFAULT false COMMENT '言語聴覚療法士在籍フラグ',
     notes text COMMENT '備考（基本情報）',
-    created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
-    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
+    updated_at timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
     FOREIGN KEY (hospital_type_id) REFERENCES hospital_types(type_id)
 ) COMMENT = '医療機関の基本情報を格納するメインテーブル';
 
@@ -41,13 +41,13 @@ CREATE TABLE areas (
     ward varchar(20) COMMENT '区',
     town varchar(30) COMMENT '町',
     is_active boolean DEFAULT true COMMENT '有効フラグ',
-    display_order int(11) AUTO_INCREMENT UNIQUE KEY COMMENT '表示順序'
+    display_order int(11) NOT NULL DEFAULT 0 COMMENT '表示順序'
 ) COMMENT = '地域マスタ情報（旧areaテーブルの改良版）';
 
 DROP TABLE IF EXISTS addresses;
 CREATE TABLE addresses (
     address_id int(11) PRIMARY KEY AUTO_INCREMENT COMMENT '住所ID',
-    hospital_id varchar(10) COMMENT '医療機関コード',
+    hospital_id varchar(10) NOT NULL COMMENT '医療機関コード',
     area_id int(11) COMMENT '地区コード（areasテーブル参照）',
     postal_code varchar(7) COMMENT '郵便番号',
     street_number varchar(200) COMMENT '番地',
@@ -61,7 +61,7 @@ CREATE TABLE addresses (
 DROP TABLE IF EXISTS contact_details;
 CREATE TABLE contact_details (
     contact_id int(11) PRIMARY KEY AUTO_INCREMENT COMMENT '連絡先ID',
-    hospital_id varchar(10) COMMENT '医療機関コード',
+    hospital_id varchar(10) NOT NULL COMMENT '医療機関コード',
     phone varchar(20) COMMENT '電話番号',
     fax varchar(20) COMMENT 'FAX番号',
     email varchar(254) COMMENT 'メールアドレス',
@@ -74,7 +74,7 @@ CREATE TABLE ward_types (
     ward_id varchar(10) PRIMARY KEY NOT NULL COMMENT '病棟種類ID',
     ward_name varchar(20) NOT NULL COMMENT '病棟名',
     is_active boolean DEFAULT true COMMENT '有効フラグ',
-    display_order int(11) AUTO_INCREMENT UNIQUE KEY COMMENT '表示順序'
+    display_order int(11) NOT NULL DEFAULT 0 COMMENT '表示順序'
 ) COMMENT = '病棟種類名を管理する';
 
 DROP TABLE IF EXISTS hospitals_ward_types;
@@ -89,7 +89,7 @@ CREATE TABLE hospitals_ward_types (
 DROP TABLE IF EXISTS hospital_staffs;
 CREATE TABLE hospital_staffs (
     staff_id int(11) PRIMARY KEY AUTO_INCREMENT COMMENT 'スタッフ管理ID',
-    hospital_id varchar(10) COMMENT '医療機関コード',
+    hospital_id varchar(10) NOT NULL COMMENT '医療機関コード',
     role_type enum('chairman','director') NOT NULL COMMENT '役職種別（理事長・病院長）',
     staff_name varchar(60) NOT NULL COMMENT '氏名',
     specialty varchar(50) COMMENT '専門分野',
@@ -118,7 +118,7 @@ CREATE TABLE medical_departments (
     department_name varchar(100) NOT NULL COMMENT '診療科名',
     category varchar(100) NOT NULL COMMENT '診療科カテゴリ名',
     is_active boolean DEFAULT true COMMENT '有効フラグ',
-    display_order int(11) AUTO_INCREMENT UNIQUE KEY COMMENT '表示順序'
+    display_order int(11) NOT NULL DEFAULT 0 COMMENT '表示順序'
 ) COMMENT = '診療科の分類と詳細を管理';
 
 -- DROP TABLE IF EXISTS medical_categories;
@@ -141,13 +141,13 @@ CREATE TABLE hospital_departments (
 -- 先に医療サービスマスタを作成
 DROP TABLE IF EXISTS medical_services;
 CREATE TABLE medical_services (
-    service_code varchar(10) COMMENT '診療内容コード',
+    service_id varchar(10) COMMENT '診療内容コード',
     service_division varchar(100) COMMENT '診療区分',
     service_category varchar(100) COMMENT '診療部門',
     service_name varchar(300) NOT NULL COMMENT '診療内容名',
     is_active boolean DEFAULT true COMMENT '有効フラグ',
-    display_order int(11) AUTO_INCREMENT UNIQUE KEY COMMENT '表示順序',
-    PRIMARY KEY (service_code, service_division)
+    display_order int(11) NOT NULL DEFAULT 0 COMMENT '表示順序',
+    PRIMARY KEY (service_id, service_division)
 ) COMMENT = '提供可能な医療サービスを管理';
 
 DROP TABLE IF EXISTS hospital_services;
@@ -185,34 +185,34 @@ CREATE TABLE carna_connects (
 -- 川崎学園マスタテーブルを先に作成
 DROP TABLE IF EXISTS kawasaki_university_facilities;
 CREATE TABLE kawasaki_university_facilities (
-    facility_id varchar(30) PRIMARY KEY COMMENT '所属施設ID',
+    facility_id varchar(20) PRIMARY KEY COMMENT '所属施設ID',
     facility_name varchar(50) NOT NULL COMMENT '施設名',
     formal_name varchar(60) NOT NULL COMMENT '正式名称',
-    abbreviation varchar(50) NOT NULL COMMENT '略称',
+    abbreviation varchar(50) NULL COMMENT '略称',
     is_active boolean DEFAULT true COMMENT '有効フラグ',
-    display_order int(11) AUTO_INCREMENT UNIQUE KEY COMMENT '表示順序'
+    display_order int(11) NOT NULL DEFAULT 0 COMMENT '表示順序'
 ) COMMENT = '川崎学園の病院情報を管理（附属病院、総合医療センター、高齢者医療センター）';
 
 DROP TABLE IF EXISTS kawasaki_university_departments;
 CREATE TABLE kawasaki_university_departments (
-    department_id varchar(30) PRIMARY KEY COMMENT '部署ID',
+    department_id varchar(20) PRIMARY KEY COMMENT '部署ID',
     department_name varchar(50) NOT NULL COMMENT '部署名',
     is_active boolean DEFAULT true COMMENT '有効フラグ',
-    display_order int(11) AUTO_INCREMENT UNIQUE KEY COMMENT '表示順序'
+    display_order int(11) NOT NULL DEFAULT 0 COMMENT '表示順序'
 ) COMMENT = '川崎学園の部署情報を管理';
 
 DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     user_id varchar(8) PRIMARY KEY COMMENT 'ユーザーID',
-    username varchar(50) NOT NULL COMMENT 'ユーザー名',
+    user_name varchar(50) NOT NULL COMMENT 'ユーザー名',
     password_hash varchar(255) NOT NULL COMMENT 'パスワードハッシュ',
-    facility_id varchar(30) COMMENT '所属施設',
-    department_id varchar(30) COMMENT '所属部署',
-    role enum('admin','editor','viewer') COMMENT '権限レベル',
-    is_active boolean COMMENT 'アカウント有効フラグ',
-    created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
-    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
-    last_login_at datetime DEFAULT NULL COMMENT '最終ログイン日時',
+    facility_id varchar(20) NOT NULL COMMENT '所属施設',
+    department_id varchar(20) NOT NULL COMMENT '所属部署',
+    role enum('admin','editor','viewer') DEFAULT 'viewer' COMMENT '権限レベル',
+    is_active boolean DEFAULT true COMMENT 'アカウント有効フラグ',
+    last_login_at timestamp NULL COMMENT '最終ログイン日時',
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
+    updated_at timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
     FOREIGN KEY (facility_id) REFERENCES kawasaki_university_facilities(facility_id),
     FOREIGN KEY (department_id) REFERENCES kawasaki_university_departments(department_id)
 ) COMMENT = 'システム利用者の情報を管理';
