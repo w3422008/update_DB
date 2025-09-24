@@ -27,8 +27,8 @@ CREATE TABLE hospitals (
     has_ot boolean DEFAULT false COMMENT '作業療法士在籍フラグ',
     has_st boolean DEFAULT false COMMENT '言語聴覚療法士在籍フラグ',
     notes text COMMENT '備考（基本情報）',
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
-    updated_at timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
+    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
     FOREIGN KEY (hospital_type_id) REFERENCES hospital_types(type_id)
 ) COMMENT = '医療機関の基本情報を格納するメインテーブル';
 
@@ -210,9 +210,9 @@ CREATE TABLE users (
     department_id varchar(20) NOT NULL COMMENT '所属部署',
     role enum('admin','editor','viewer') DEFAULT 'viewer' COMMENT '権限レベル',
     is_active boolean DEFAULT true COMMENT 'アカウント有効フラグ',
-    last_login_at timestamp NULL COMMENT '最終ログイン日時',
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
-    updated_at timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    last_login_at datetime NULL COMMENT '最終ログイン日時',
+    created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
+    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
     FOREIGN KEY (facility_id) REFERENCES kawasaki_university_facilities(facility_id),
     FOREIGN KEY (department_id) REFERENCES kawasaki_university_departments(department_id)
 ) COMMENT = 'システム利用者の情報を管理';
@@ -333,8 +333,139 @@ CREATE TABLE contacts (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 ) COMMENT = '医療機関同士のコンタクト履歴を保管';
 
+-- 問い合わせテーブル
+DROP TABLE IF EXISTS inquires;
+CREATE TABLE inquires (
+    inquire_id bigint(20) PRIMARY KEY AUTO_INCREMENT COMMENT '問い合わせID',
+    user_id varchar(8) COMMENT '問い合わせ者ユーザーID',
+    priority enum('general','urgent') DEFAULT 'general' COMMENT '優先度',
+    status enum('open','in_progress','resolved','closed') DEFAULT 'open' COMMENT '対応状況',
+    description text NOT NULL COMMENT '問い合わせ内容',
+    assigned_to varchar(8) COMMENT '担当者ユーザーID',
+    resolution text NULL COMMENT '解決方法・回答内容',
+    created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '問い合わせ日時',
+    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最終更新日時',
+    resolved_at datetime NULL COMMENT '解決日時',
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (assigned_to) REFERENCES users(user_id)
+) COMMENT = 'システムに関する問い合わせ内容を管理';
+
+-- =================================================================
+-- システム運営管理系テーブル
+-- =================================================================
+
+-- メンテナンス通知テーブル
+DROP TABLE IF EXISTS maintenance;
+CREATE TABLE maintenance (
+    maintenance_id bigint(20) PRIMARY KEY AUTO_INCREMENT COMMENT 'メンテナンスID',
+    title varchar(200) NOT NULL COMMENT 'タイトル',
+    comment text NOT NULL COMMENT '実施内容',
+    date date NOT NULL COMMENT '予定作業日',
+    start_time time NULL COMMENT '予定開始時刻',
+    end_time time NULL COMMENT '予定終了時刻',
+    view boolean NOT NULL DEFAULT true COMMENT '表示フラグ',
+    created_by varchar(8) NOT NULL COMMENT '作成者ユーザーID',
+    created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
+    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
+) COMMENT = '事前メンテナンス通知を管理';
+
+-- メンテナンス実行中通知テーブル
+DROP TABLE IF EXISTS maintenance_start;
+CREATE TABLE maintenance_start (
+    id bigint(20) PRIMARY KEY AUTO_INCREMENT COMMENT '実行通知ID',
+    maintenance_id bigint(20) NOT NULL COMMENT 'メンテナンスID',
+    title varchar(200) NOT NULL COMMENT '通知タイトル',
+    description text NULL COMMENT '通知詳細',
+    implementation_details text NULL COMMENT '実施内容',
+    view boolean NOT NULL DEFAULT true COMMENT '表示フラグ',
+    created_by varchar(8) NOT NULL COMMENT '作成者ユーザーID',
+    created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
+    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    FOREIGN KEY (maintenance_id) REFERENCES maintenance(maintenance_id),
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
+) COMMENT = 'メンテナンス実行中の通知を管理';
+
+-- システムバージョン管理テーブル
+DROP TABLE IF EXISTS system_versions;
+CREATE TABLE system_versions (
+    version_id int(11) PRIMARY KEY AUTO_INCREMENT COMMENT 'バージョン管理ID',
+    version_number varchar(20) NOT NULL UNIQUE COMMENT 'バージョン番号（例：4.5.2）',
+    release_date date NOT NULL COMMENT 'リリース日',
+    is_current boolean NOT NULL DEFAULT false COMMENT '現在稼働バージョンフラグ',
+    release_notes text NULL COMMENT 'リリースノート・変更内容',
+    created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時'
+) COMMENT = 'システムのバージョン情報を最小限で管理';
+
+-- メッセージテーブル（システム更新履歴・要望管理）
+DROP TABLE IF EXISTS message;
+CREATE TABLE message (
+    message_id bigint(20) PRIMARY KEY AUTO_INCREMENT COMMENT 'メッセージID',
+    status enum('open','in_progress','completed','rejected') DEFAULT 'open' COMMENT '対応状況',
+    comment text NOT NULL COMMENT '内容',
+    view boolean NOT NULL DEFAULT true COMMENT '表示フラグ',
+    version_id int(11) NULL COMMENT '実装バージョンID',
+    assigned_to varchar(8) NOT NULL COMMENT '担当者ユーザーID',
+    priority enum('low','normal','urgent') DEFAULT 'normal' COMMENT '優先度',
+    res_date date NULL COMMENT '対応日',
+    created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
+    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    FOREIGN KEY (version_id) REFERENCES system_versions(version_id),
+    FOREIGN KEY (assigned_to) REFERENCES users(user_id)
+) COMMENT = 'システムの更新履歴、実装予定機能掲載、現状報告を管理';
+
+-- システム状態管理テーブル
+DROP TABLE IF EXISTS system_status;
+CREATE TABLE system_status (
+    status_id int(11) PRIMARY KEY AUTO_INCREMENT COMMENT '状態ID',
+    system_mode enum('normal','maintenance','read_only') DEFAULT 'normal' COMMENT 'システムモード',
+    status_message varchar(500) NULL COMMENT '現在の状態メッセージ',
+    maintenance_id bigint(20) NULL COMMENT '関連メンテナンスID',
+    changed_by varchar(8) NOT NULL COMMENT '状態変更者ユーザーID',
+    created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
+    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    FOREIGN KEY (maintenance_id) REFERENCES maintenance(maintenance_id),
+    FOREIGN KEY (changed_by) REFERENCES users(user_id)
+) COMMENT = '現在のシステムモードと状態を管理するシンプルなテーブル';
+
 -- 外部キー制約チェックを再度有効化
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- =================================================================
+-- インデックス追加（パフォーマンス向上）
+-- =================================================================
+
+-- maintenanceテーブル
+CREATE INDEX idx_maintenance_date ON maintenance(date);
+CREATE INDEX idx_maintenance_view ON maintenance(view);
+CREATE INDEX idx_maintenance_created_by ON maintenance(created_by);
+
+-- maintenance_startテーブル
+CREATE INDEX idx_maintenance_start_maintenance_id ON maintenance_start(maintenance_id);
+CREATE INDEX idx_maintenance_start_view ON maintenance_start(view);
+
+-- system_versionsテーブル
+CREATE INDEX idx_system_versions_is_current ON system_versions(is_current);
+CREATE INDEX idx_system_versions_release_date ON system_versions(release_date);
+
+-- messageテーブル
+CREATE INDEX idx_message_status ON message(status);
+CREATE INDEX idx_message_priority ON message(priority);
+CREATE INDEX idx_message_assigned_to ON message(assigned_to);
+CREATE INDEX idx_message_version_id ON message(version_id);
+CREATE INDEX idx_message_created_at ON message(created_at);
+
+-- system_statusテーブル
+CREATE INDEX idx_system_status_system_mode ON system_status(system_mode);
+CREATE INDEX idx_system_status_maintenance_id ON system_status(maintenance_id);
+CREATE INDEX idx_system_status_created_at ON system_status(created_at);
+
+-- inquiresテーブル
+CREATE INDEX idx_inquires_user_id ON inquires(user_id);
+CREATE INDEX idx_inquires_status ON inquires(status);
+CREATE INDEX idx_inquires_priority ON inquires(priority);
+CREATE INDEX idx_inquires_assigned_to ON inquires(assigned_to);
+CREATE INDEX idx_inquires_created_at ON inquires(created_at);
 
 -- =================================================================
 -- 自動ログ記録用トリガー
@@ -508,6 +639,132 @@ FOR EACH ROW BEGIN
             NOW());
 END$$
 
+-- =================================================================
+-- システム運営管理系テーブル用トリガー追加
+-- =================================================================
+
+-- maintenanceテーブル用監査トリガー
+CREATE TRIGGER maintenance_insert_audit AFTER INSERT ON maintenance
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, user_id, created_at)
+    VALUES ('audit', 'maintenance', NEW.maintenance_id, 'INSERT', 
+            JSON_OBJECT('maintenance_id', NEW.maintenance_id, 'title', NEW.title, 'comment', NEW.comment,
+                       'date', NEW.date, 'start_time', NEW.start_time, 'end_time', NEW.end_time,
+                       'view', NEW.view, 'created_by', NEW.created_by),
+            NEW.created_by, NOW());
+END$$
+
+CREATE TRIGGER maintenance_update_audit AFTER UPDATE ON maintenance
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, user_id, created_at)
+    VALUES ('audit', 'maintenance', NEW.maintenance_id, 'UPDATE',
+            JSON_OBJECT('maintenance_id', OLD.maintenance_id, 'title', OLD.title, 'comment', OLD.comment,
+                       'date', OLD.date, 'start_time', OLD.start_time, 'end_time', OLD.end_time,
+                       'view', OLD.view, 'created_by', OLD.created_by),
+            JSON_OBJECT('maintenance_id', NEW.maintenance_id, 'title', NEW.title, 'comment', NEW.comment,
+                       'date', NEW.date, 'start_time', NEW.start_time, 'end_time', NEW.end_time,
+                       'view', NEW.view, 'created_by', NEW.created_by),
+            NEW.created_by, NOW());
+END$$
+
+CREATE TRIGGER maintenance_delete_audit AFTER DELETE ON maintenance
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
+    VALUES ('audit', 'maintenance', OLD.maintenance_id, 'DELETE',
+            JSON_OBJECT('maintenance_id', OLD.maintenance_id, 'title', OLD.title, 'comment', OLD.comment,
+                       'date', OLD.date, 'start_time', OLD.start_time, 'end_time', OLD.end_time,
+                       'view', OLD.view, 'created_by', OLD.created_by),
+            NOW());
+END$$
+
+-- messageテーブル用監査トリガー
+CREATE TRIGGER message_insert_audit AFTER INSERT ON message
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, user_id, created_at)
+    VALUES ('audit', 'message', NEW.message_id, 'INSERT', 
+            JSON_OBJECT('message_id', NEW.message_id, 'status', NEW.status, 'comment', NEW.comment,
+                       'version_id', NEW.version_id, 'assigned_to', NEW.assigned_to, 'priority', NEW.priority),
+            NEW.assigned_to, NOW());
+END$$
+
+CREATE TRIGGER message_update_audit AFTER UPDATE ON message
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, user_id, created_at)
+    VALUES ('audit', 'message', NEW.message_id, 'UPDATE',
+            JSON_OBJECT('message_id', OLD.message_id, 'status', OLD.status, 'comment', OLD.comment,
+                       'version_id', OLD.version_id, 'assigned_to', OLD.assigned_to, 'priority', OLD.priority),
+            JSON_OBJECT('message_id', NEW.message_id, 'status', NEW.status, 'comment', NEW.comment,
+                       'version_id', NEW.version_id, 'assigned_to', NEW.assigned_to, 'priority', NEW.priority),
+            NEW.assigned_to, NOW());
+END$$
+
+CREATE TRIGGER message_delete_audit AFTER DELETE ON message
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
+    VALUES ('audit', 'message', OLD.message_id, 'DELETE',
+            JSON_OBJECT('message_id', OLD.message_id, 'status', OLD.status, 'comment', OLD.comment,
+                       'version_id', OLD.version_id, 'assigned_to', OLD.assigned_to, 'priority', OLD.priority),
+            NOW());
+END$$
+
+-- system_statusテーブル用監査トリガー
+CREATE TRIGGER system_status_insert_audit AFTER INSERT ON system_status
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, user_id, created_at)
+    VALUES ('audit', 'system_status', NEW.status_id, 'INSERT', 
+            JSON_OBJECT('status_id', NEW.status_id, 'system_mode', NEW.system_mode, 
+                       'status_message', NEW.status_message, 'maintenance_id', NEW.maintenance_id,
+                       'changed_by', NEW.changed_by),
+            NEW.changed_by, NOW());
+END$$
+
+CREATE TRIGGER system_status_update_audit AFTER UPDATE ON system_status
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, user_id, created_at)
+    VALUES ('audit', 'system_status', NEW.status_id, 'UPDATE',
+            JSON_OBJECT('status_id', OLD.status_id, 'system_mode', OLD.system_mode, 
+                       'status_message', OLD.status_message, 'maintenance_id', OLD.maintenance_id,
+                       'changed_by', OLD.changed_by),
+            JSON_OBJECT('status_id', NEW.status_id, 'system_mode', NEW.system_mode, 
+                       'status_message', NEW.status_message, 'maintenance_id', NEW.maintenance_id,
+                       'changed_by', NEW.changed_by),
+            NEW.changed_by, NOW());
+END$$
+
+-- inquiresテーブル用監査トリガー
+CREATE TRIGGER inquires_insert_audit AFTER INSERT ON inquires
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, user_id, created_at)
+    VALUES ('audit', 'inquires', NEW.inquire_id, 'INSERT', 
+            JSON_OBJECT('inquire_id', NEW.inquire_id, 'user_id', NEW.user_id, 'priority', NEW.priority,
+                       'status', NEW.status, 'description', NEW.description, 'assigned_to', NEW.assigned_to,
+                       'created_at', NEW.created_at, 'updated_at', NEW.updated_at, 'resolved_at', NEW.resolved_at),
+            NEW.user_id, NOW());
+END$$
+
+CREATE TRIGGER inquires_update_audit AFTER UPDATE ON inquires
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, user_id, created_at)
+    VALUES ('audit', 'inquires', NEW.inquire_id, 'UPDATE',
+            JSON_OBJECT('inquire_id', OLD.inquire_id, 'user_id', OLD.user_id, 'priority', OLD.priority,
+                       'status', OLD.status, 'description', OLD.description, 'assigned_to', OLD.assigned_to,
+                       'created_at', OLD.created_at, 'updated_at', OLD.updated_at, 'resolved_at', OLD.resolved_at),
+            JSON_OBJECT('inquire_id', NEW.inquire_id, 'user_id', NEW.user_id, 'priority', NEW.priority,
+                       'status', NEW.status, 'description', NEW.description, 'assigned_to', NEW.assigned_to,
+                       'created_at', NEW.created_at, 'updated_at', NEW.updated_at, 'resolved_at', NEW.resolved_at),
+            NEW.user_id, NOW());
+END$$
+
+CREATE TRIGGER inquires_delete_audit AFTER DELETE ON inquires
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, user_id, created_at)
+    VALUES ('audit', 'inquires', OLD.inquire_id, 'DELETE',
+            JSON_OBJECT('inquire_id', OLD.inquire_id, 'user_id', OLD.user_id, 'priority', OLD.priority,
+                       'status', OLD.status, 'description', OLD.description, 'assigned_to', OLD.assigned_to,
+                       'created_at', OLD.created_at, 'updated_at', OLD.updated_at, 'resolved_at', OLD.resolved_at),
+            OLD.user_id, NOW());
+END$$
+
 DELIMITER ;
 
 -- =================================================================
@@ -573,16 +830,293 @@ WHERE ul.log_type = 'access'
 GROUP BY u.user_id, u.username, u.facility_id, u.department_id
 ORDER BY last_access DESC;
 
--- ログイン試行統計ビュー
-CREATE VIEW login_attempt_summary AS
+-- =================================================================
+-- システム運営管理用ビュー
+-- =================================================================
+
+-- 現在のシステム状態ビュー
+CREATE VIEW current_system_status AS
 SELECT 
-    DATE(created_at) as attempt_date,
-    event_type,
-    COUNT(*) as attempt_count,
-    COUNT(DISTINCT user_id) as unique_users,
-    COUNT(DISTINCT ip_address) as unique_ips
-FROM unified_logs 
-WHERE log_type = 'login_attempt'
-   AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-GROUP BY DATE(created_at), event_type
-ORDER BY attempt_date DESC, event_type;
+    ss.status_id,
+    ss.system_mode,
+    ss.status_message,
+    ss.created_at as status_changed_at,
+    u.user_name as changed_by_name,
+    uf.facility_name,
+    ud.department_name,
+    m.title as maintenance_title,
+    m.date as maintenance_date,
+    m.start_time as maintenance_start,
+    m.end_time as maintenance_end
+FROM system_status ss
+LEFT JOIN users u ON ss.changed_by = u.user_id
+LEFT JOIN kawasaki_university_facilities uf ON u.facility_id = uf.facility_id
+LEFT JOIN kawasaki_university_departments ud ON u.department_id = ud.department_id
+LEFT JOIN maintenance m ON ss.maintenance_id = m.maintenance_id
+ORDER BY ss.created_at DESC
+LIMIT 1;
+
+-- 現在稼働中のバージョン情報ビュー
+CREATE VIEW current_version AS
+SELECT 
+    version_id,
+    version_number,
+    release_date,
+    release_notes,
+    created_at
+FROM system_versions 
+WHERE is_current = true
+ORDER BY version_id DESC
+LIMIT 1;
+
+-- メンテナンス予定一覧ビュー
+CREATE VIEW maintenance_schedule AS
+SELECT 
+    m.maintenance_id,
+    m.title,
+    m.comment,
+    m.date,
+    m.start_time,
+    m.end_time,
+    m.view,
+    u.user_name as created_by_name,
+    uf.facility_name,
+    ud.department_name,
+    m.created_at,
+    CASE 
+        WHEN m.date < CURDATE() THEN '完了'
+        WHEN m.date = CURDATE() AND CURTIME() BETWEEN COALESCE(m.start_time, '00:00:00') AND COALESCE(m.end_time, '23:59:59') THEN '実行中'
+        WHEN m.date = CURDATE() AND CURTIME() < COALESCE(m.start_time, '00:00:00') THEN '本日予定'
+        WHEN m.date > CURDATE() THEN '予定'
+        ELSE '完了'
+    END as status
+FROM maintenance m
+LEFT JOIN users u ON m.created_by = u.user_id
+LEFT JOIN kawasaki_university_facilities uf ON u.facility_id = uf.facility_id
+LEFT JOIN kawasaki_university_departments ud ON u.department_id = ud.department_id
+WHERE m.view = true
+ORDER BY m.date DESC, m.start_time ASC;
+
+-- メッセージ・要望管理ビュー
+CREATE VIEW message_management AS
+SELECT 
+    msg.message_id,
+    msg.status,
+    msg.comment,
+    msg.priority,
+    msg.res_date,
+    msg.created_at,
+    msg.updated_at,
+    u_assigned.user_name as assigned_to_name,
+    uf_assigned.facility_name as assigned_facility,
+    ud_assigned.department_name as assigned_department,
+    sv.version_number as implemented_version,
+    sv.release_date as version_release_date,
+    CASE 
+        WHEN msg.status = 'completed' THEN DATEDIFF(msg.res_date, DATE(msg.created_at))
+        WHEN msg.status IN ('open', 'in_progress') THEN DATEDIFF(CURDATE(), DATE(msg.created_at))
+        ELSE NULL
+    END as days_elapsed
+FROM message msg
+LEFT JOIN users u_assigned ON msg.assigned_to = u_assigned.user_id
+LEFT JOIN kawasaki_university_facilities uf_assigned ON u_assigned.facility_id = uf_assigned.facility_id
+LEFT JOIN kawasaki_university_departments ud_assigned ON u_assigned.department_id = ud_assigned.department_id
+LEFT JOIN system_versions sv ON msg.version_id = sv.version_id
+WHERE msg.view = true
+ORDER BY 
+    CASE msg.priority 
+        WHEN 'urgent' THEN 1
+        WHEN 'normal' THEN 2
+        WHEN 'low' THEN 3
+    END,
+    msg.created_at DESC;
+
+-- バージョン管理統計ビュー
+CREATE VIEW version_statistics AS
+SELECT 
+    sv.version_id,
+    sv.version_number,
+    sv.release_date,
+    sv.is_current,
+    COUNT(msg.message_id) as related_messages,
+    COUNT(CASE WHEN msg.status = 'completed' THEN 1 END) as completed_messages,
+    COUNT(CASE WHEN msg.status = 'in_progress' THEN 1 END) as in_progress_messages,
+    COUNT(CASE WHEN msg.status = 'open' THEN 1 END) as open_messages
+FROM system_versions sv
+LEFT JOIN message msg ON sv.version_id = msg.version_id
+GROUP BY sv.version_id, sv.version_number, sv.release_date, sv.is_current
+ORDER BY sv.release_date DESC;
+
+-- 問い合わせ管理ビュー
+CREATE VIEW inquire_management AS
+SELECT 
+    inq.inquire_id,
+    inq.priority,
+    inq.status,
+    inq.description,
+    inq.resolution,
+    inq.created_at,
+    inq.updated_at,
+    inq.resolved_at,
+    u_user.user_name as inquirer_name,
+    uf_user.facility_name as inquirer_facility,
+    ud_user.department_name as inquirer_department,
+    u_assigned.user_name as assigned_to_name,
+    uf_assigned.facility_name as assigned_facility,
+    ud_assigned.department_name as assigned_department,
+    CASE 
+        WHEN inq.status = 'resolved' AND inq.resolved_at IS NOT NULL THEN 
+            TIMESTAMPDIFF(HOUR, inq.created_at, inq.resolved_at)
+        WHEN inq.status IN ('open', 'in_progress') THEN 
+            TIMESTAMPDIFF(HOUR, inq.created_at, NOW())
+        ELSE NULL
+    END as response_time_hours,
+    DATEDIFF(CURDATE(), DATE(inq.created_at)) as days_since_created
+FROM inquires inq
+LEFT JOIN users u_user ON inq.user_id = u_user.user_id
+LEFT JOIN kawasaki_university_facilities uf_user ON u_user.facility_id = uf_user.facility_id
+LEFT JOIN kawasaki_university_departments ud_user ON u_user.department_id = ud_user.department_id
+LEFT JOIN users u_assigned ON inq.assigned_to = u_assigned.user_id
+LEFT JOIN kawasaki_university_facilities uf_assigned ON u_assigned.facility_id = uf_assigned.facility_id
+LEFT JOIN kawasaki_university_departments ud_assigned ON u_assigned.department_id = ud_assigned.department_id
+ORDER BY 
+    CASE inq.priority 
+        WHEN 'urgent' THEN 1
+        WHEN 'general' THEN 2
+    END,
+    inq.created_at DESC;
+
+-- 問い合わせ統計ビュー
+CREATE VIEW inquire_statistics AS
+SELECT 
+    COUNT(*) as total_inquiries,
+    COUNT(CASE WHEN status = 'open' THEN 1 END) as open_inquiries,
+    COUNT(CASE WHEN status = 'in_progress' THEN 1 END) as in_progress_inquiries,
+    COUNT(CASE WHEN status = 'resolved' THEN 1 END) as resolved_inquiries,
+    COUNT(CASE WHEN status = 'closed' THEN 1 END) as closed_inquiries,
+    COUNT(CASE WHEN priority = 'urgent' THEN 1 END) as urgent_inquiries,
+    COUNT(CASE WHEN priority = 'general' THEN 1 END) as general_inquiries,
+    AVG(CASE 
+        WHEN status = 'resolved' AND resolved_at IS NOT NULL THEN 
+            TIMESTAMPDIFF(HOUR, created_at, resolved_at)
+    END) as avg_resolution_time_hours,
+    DATE(created_at) as inquiry_date
+FROM inquires 
+WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+GROUP BY DATE(created_at)
+ORDER BY inquiry_date DESC;
+
+-- システム利用統計ビュー（最新30日間）
+CREATE VIEW system_usage_stats AS
+SELECT 
+    DATE(ul.created_at) as usage_date,
+    COUNT(DISTINCT ul.user_id) as unique_users,
+    COUNT(CASE WHEN ul.log_type = 'access' THEN 1 END) as total_accesses,
+    COUNT(CASE WHEN ul.access_type = 'login' THEN 1 END) as login_count,
+    COUNT(CASE WHEN ul.log_type = 'audit' THEN 1 END) as audit_actions,
+    COUNT(CASE WHEN ul.log_type = 'security' AND ul.severity IN ('high', 'critical') THEN 1 END) as security_alerts
+FROM unified_logs ul
+WHERE ul.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+GROUP BY DATE(ul.created_at)
+ORDER BY usage_date DESC;
+
+-- =================================================================
+-- 便利な関数・プロシージャ
+-- =================================================================
+
+-- 現在のシステムバージョンを取得する関数
+DELIMITER $$
+CREATE FUNCTION get_current_version() RETURNS VARCHAR(20)
+READS SQL DATA
+DETERMINISTIC
+BEGIN
+    DECLARE current_ver VARCHAR(20) DEFAULT 'Unknown';
+    
+    SELECT version_number INTO current_ver
+    FROM system_versions 
+    WHERE is_current = true
+    LIMIT 1;
+    
+    RETURN current_ver;
+END$$
+
+-- バージョンアップ時の安全な切り替えプロシージャ
+CREATE PROCEDURE switch_current_version(IN new_version_id INT)
+MODIFIES SQL DATA
+BEGIN
+    DECLARE version_exists INT DEFAULT 0;
+    
+    -- 指定バージョンが存在するかチェック
+    SELECT COUNT(*) INTO version_exists
+    FROM system_versions
+    WHERE version_id = new_version_id;
+    
+    IF version_exists > 0 THEN
+        -- 全バージョンのis_currentを無効化
+        UPDATE system_versions SET is_current = false;
+        
+        -- 指定バージョンのみ有効化
+        UPDATE system_versions 
+        SET is_current = true 
+        WHERE version_id = new_version_id;
+        
+        -- ログに記録
+        INSERT INTO unified_logs (log_type, table_name, record_id, action_type, description, created_at)
+        VALUES ('audit', 'system_versions', new_version_id, 'UPDATE', 
+                CONCAT('バージョン切り替え: version_id=', new_version_id), NOW());
+    END IF;
+END$$
+
+-- 問い合わせの自動エスカレーション処理プロシージャ
+CREATE PROCEDURE escalate_urgent_inquiries()
+MODIFIES SQL DATA
+BEGIN
+    -- 緊急度高の問い合わせで24時間以上未対応のものを対応中に移行
+    UPDATE inquires 
+    SET status = 'in_progress',
+        updated_at = CURRENT_TIMESTAMP
+    WHERE priority = 'urgent' 
+    AND status = 'open'
+    AND created_at <= DATE_SUB(NOW(), INTERVAL 24 HOUR);
+    
+    -- 一般問い合わせで72時間以上未対応のものをログに記録
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, description, created_at)
+    SELECT 'security', 'inquires', inquire_id, 'UPDATE', 
+           CONCAT('自動エスカレーション: 72時間未対応 - ', LEFT(description, 100)), NOW()
+    FROM inquires
+    WHERE priority = 'general'
+    AND status = 'open'
+    AND created_at <= DATE_SUB(NOW(), INTERVAL 72 HOUR);
+END$$
+
+-- 問い合わせステータス一括更新プロシージャ
+CREATE PROCEDURE update_inquire_status(
+    IN p_inquire_id BIGINT,
+    IN p_new_status ENUM('open','in_progress','resolved','closed'),
+    IN p_resolution TEXT,
+    IN p_assigned_to VARCHAR(8)
+)
+MODIFIES SQL DATA
+BEGIN
+    DECLARE old_status ENUM('open','in_progress','resolved','closed');
+    
+    -- 現在のステータスを取得
+    SELECT status INTO old_status FROM inquires WHERE inquire_id = p_inquire_id;
+    
+    -- ステータス更新
+    UPDATE inquires 
+    SET status = p_new_status,
+        assigned_to = COALESCE(p_assigned_to, assigned_to),
+        resolution = CASE WHEN p_new_status = 'resolved' THEN COALESCE(p_resolution, resolution) ELSE resolution END,
+        resolved_at = CASE WHEN p_new_status = 'resolved' THEN CURRENT_TIMESTAMP ELSE resolved_at END,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE inquire_id = p_inquire_id;
+    
+    -- ログ記録
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, description, user_id, created_at)
+    VALUES ('audit', 'inquires', p_inquire_id, 'UPDATE', 
+            CONCAT('ステータス変更: ', old_status, ' → ', p_new_status), 
+            p_assigned_to, NOW());
+END$$
+
+DELIMITER ;
