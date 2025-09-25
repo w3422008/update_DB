@@ -11,10 +11,17 @@
 | hospital_type_id | varchar(11) | FOREIGN KEY | 病院区分ID |
 | hospital_name | varchar(100) | NOT NULL | 医療機関名 |
 | status | enum('active','closed') | DEFAULT 'active' | 運営状況 |
-| bed_count | int(11) | DEFAULT 0 | 許可病床数 |
+
 | has_pt | boolean | DEFAULT false | 理学療法士在籍フラグ |
 | has_ot | boolean | DEFAULT false | 作業療法士在籍フラグ |
 | has_st | boolean | DEFAULT false | 言語聴覚療法士在籍フラグ |
+| bed_count | int(11) | DEFAULT 0 | 許可病床数 |
+| bed_rehabilitation | int(11) | DEFAULT 0 | リハビリ病床数 |
+| bed_medical_care | int(11) | DEFAULT 0 | 療養病床数 |
+| bed_general | int(11) | DEFAULT 0 | 一般病床数 |
+| bed_nursing_care | int(11) | DEFAULT 0 | 介護病床数 |
+| bed_conversion | int(11) | DEFAULT 0 | 転換病床数 |
+| bed_psychiatric | int(11) | DEFAULT 0 | 精神病床数 |
 | notes | text | NULL | 備考（基本情報） |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
