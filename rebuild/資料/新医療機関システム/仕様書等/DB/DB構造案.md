@@ -11,7 +11,6 @@
 | hospital_type_id | varchar(11) | FOREIGN KEY | 病院区分ID |
 | hospital_name | varchar(100) | NOT NULL | 医療機関名 |
 | status | enum('active','closed') | DEFAULT 'active' | 運営状況 |
-
 | has_pt | boolean | DEFAULT false | 理学療法士在籍フラグ |
 | has_ot | boolean | DEFAULT false | 作業療法士在籍フラグ |
 | has_st | boolean | DEFAULT false | 言語聴覚療法士在籍フラグ |
