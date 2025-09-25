@@ -10,13 +10,13 @@
 | カラム名 | データ型 | 説明 | 移行済み | 備考 |
 |---------|---------|------|---------|------|
 | are_cd | int(11) | 地域コード | <input type="checkbox"> |  |
-| area_name | varchar(20) | エリア名 | <input type="checkbox"> |  |
-| sec_cd | int(11) | セクションコード | <input type="checkbox"> |  |
+| area_name | varchar(20) | エリア名 | <input type="checkbox" checked> |  |
+| sec_cd | int(11) | セクションコード | <input type="checkbox" checked> |  |
 | area1 | varchar(50) | エリア1 | <input type="checkbox"> |  |
 | area2 | varchar(50) | エリア2 | <input type="checkbox"> |  |
-| city | varchar(30) | 市 | <input type="checkbox"> |  |
-| zone | varchar(20) | 区 | <input type="checkbox"> |  |
-| town | varchar(30) | 町 | <input type="checkbox"> |  |
+| city | varchar(30) | 市 | <input type="checkbox" checked> |  |
+| zone | varchar(20) | 区 | <input type="checkbox" checked> |  |
+| town | varchar(30) | 町 | <input type="checkbox" checked> |  |
 
 ---
 
@@ -24,8 +24,8 @@
 
 | カラム名 | データ型 | 説明 | 移行済み | 備考 |
 |---------|---------|------|---------|------|
-| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox"> |  |
-| delete_flg | int(11) | 削除フラグ | <input type="checkbox"> |  |
+| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox" checked> |  |
+| delete_flg | int(11) | 削除フラグ | <input type="checkbox" checked> |  |
 
 ---
 
@@ -81,18 +81,18 @@
 
 | カラム名 | データ型 | 説明 | 移行済み | 備考 |
 |---------|---------|------|---------|------|
-| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox"> |  |
+| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox" checked> |  |
 | ins | int(11) | 施設区分（0:附属 1:総合） | <input type="checkbox"> |  |
-| cp0 | int(11) | 入退院支援連携先病院 | <input type="checkbox"> |  |
-| cp1 | int(11) | 脳卒中パス | <input type="checkbox"> |  |
-| cp2 | int(11) | 大腿骨パス | <input type="checkbox"> |  |
-| cp3 | int(11) | 心筋梗塞・心不全パス | <input type="checkbox"> |  |
-| cp4 | int(11) | 胃がんパス | <input type="checkbox"> |  |
-| cp5 | int(11) | 大腸がんパス | <input type="checkbox"> |  |
-| cp6 | int(11) | 乳がんパス | <input type="checkbox"> |  |
-| cp7 | int(11) | 肺がんパス | <input type="checkbox"> |  |
-| cp8 | int(11) | 肝がんパス | <input type="checkbox"> |  |
-| delete_flg | int(11) | 削除フラグ | <input type="checkbox"> |  |
+| cp0 | int(11) | 入退院支援連携先病院 | <input type="checkbox" checked> |  |
+| cp1 | int(11) | 脳卒中パス | <input type="checkbox" checked> |  |
+| cp2 | int(11) | 大腿骨パス | <input type="checkbox" checked> |  |
+| cp3 | int(11) | 心筋梗塞・心不全パス | <input type="checkbox" checked> |  |
+| cp4 | int(11) | 胃がんパス | <input type="checkbox" checked> |  |
+| cp5 | int(11) | 大腸がんパス | <input type="checkbox" checked> |  |
+| cp6 | int(11) | 乳がんパス | <input type="checkbox" checked> |  |
+| cp7 | int(11) | 肺がんパス | <input type="checkbox" checked> |  |
+| cp8 | int(11) | 肝がんパス | <input type="checkbox" checked> |  |
+| delete_flg | int(11) | 削除フラグ | <input type="checkbox" checked> |  |
 
 ---
 
@@ -116,9 +116,9 @@
 | カラム名 | データ型 | 説明 | 移行済み | 備考 |
 |---------|---------|------|---------|------|
 | sec_cd | int(11) | セクションコード | <input type="checkbox"> |  |
-| sec_name | varchar(10) | セクション名 | <input type="checkbox"> |  |
-| dep_cd | varchar(30) | 診療科コード | <input type="checkbox"> |  |
-| dep_name | varchar(30) | 診療科名 | <input type="checkbox"> |  |
+| sec_name | varchar(10) | セクション名 | <input type="checkbox" checked> |  |
+| dep_cd | varchar(30) | 診療科コード | <input type="checkbox" checked> |  |
+| dep_name | varchar(30) | 診療科名 | <input type="checkbox" checked> |  |
 
 ---
 
@@ -126,14 +126,14 @@
 
 | カラム名 | データ型 | 説明 | 移行済み | 備考 |
 |---------|---------|------|---------|------|
-| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox"> |  |
+| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox" checked> |  |
 | hos_name | varchar(100) | 医療機関名 | <input type="checkbox"> |  |
 | fie_div | varchar(15) | 部門区分 | <input type="checkbox"> |  |
-| fie_name | varchar(30) | 部門名 | <input type="checkbox"> |  |
-| tel | varchar(20) | 電話番号 | <input type="checkbox"> |  |
-| fax | varchar(20) | FAX番号 | <input type="checkbox"> |  |
-| note | varchar(200) | 備考 | <input type="checkbox"> |  |
-| delete_flg | int(11) | 削除フラグ | <input type="checkbox"> |  |
+| fie_name | varchar(30) | 部門名 | <input type="checkbox" checked> |  |
+| tel | varchar(20) | 電話番号 | <input type="checkbox" checked> |  |
+| fax | varchar(20) | FAX番号 | <input type="checkbox" checked> |  |
+| note | varchar(200) | 備考 | <input type="checkbox" checked> |  |
+| delete_flg | int(11) | 削除フラグ | <input type="checkbox" checked> |  |
 | fie_cd | int(11) | 部門コード（主キー） | <input type="checkbox"> |  |
 
 ---
@@ -241,109 +241,109 @@
 
 | カラム名 | データ型 | 説明 | 移行済み | 備考 |
 |---------|---------|------|---------|------|
-| op_flg | int(11) | オプションフラグ | <input type="checkbox"> |  |
+| op_flg | int(11) | オプションフラグ | <input type="checkbox" checked> |  |
 | med_ass | varchar(10) | 医師会 | <input type="checkbox"> |  |
 | hos_div | varchar(5) | 病院区分 | <input type="checkbox" checked> |  |
 | hos_cd | varchar(10) | 医療機関コード | <input type="checkbox" checked> |  |
 | hos_name | varchar(100) | 医療機関名 | <input type="checkbox" checked> |  |
-| zipcode | varchar(7) | 郵便番号 | <input type="checkbox"> |  |
-| ad | varchar(400) | 住所 | <input type="checkbox"> |  |
-| tel | varchar(20) | 電話番号 | <input type="checkbox"> |  |
-| fax | varchar(20) | FAX番号 | <input type="checkbox"> |  |
-| email | varchar(254) | メールアドレス | <input type="checkbox"> |  |
-| are_cd | int(11) | 地域コード | <input type="checkbox"> |  |
-| pre | varchar(10) | 都道府県 | <input type="checkbox"> |  |
-| area | varchar(40) | エリア | <input type="checkbox"> |  |
-| city | varchar(40) | 市 | <input type="checkbox"> |  |
-| zone | varchar(40) | 区 | <input type="checkbox"> |  |
-| town | varchar(40) | 町 | <input type="checkbox"> |  |
-| str_num | varchar(200) | 番地 | <input type="checkbox"> |  |
-| note | varchar(1000) | 備考 | <input type="checkbox"> |  |
-| clo_day | varchar(20) | 休診日 | <input type="checkbox"> |  |
-| chi_name | varchar(60) | 理事長氏名 | <input type="checkbox"> |  |
-| chi_spe | varchar(20) | 理事長専門 | <input type="checkbox"> |  |
-| chi_year | varchar(7) | 理事長卒業年 | <input type="checkbox"> |  |
-| chi_sch | varchar(50) | 理事長学校 | <input type="checkbox"> |  |
-| chi_note | varchar(100) | 理事長備考 | <input type="checkbox"> |  |
-| pre_name | varchar(60) | 院長氏名 | <input type="checkbox"> |  |
-| pre_spe | varchar(20) | 院長専門 | <input type="checkbox"> |  |
-| pre_year | varchar(7) | 院長卒業年 | <input type="checkbox"> |  |
-| pre_sch | varchar(50) | 院長学校 | <input type="checkbox"> |  |
-| pre_note | varchar(100) | 院長備考 | <input type="checkbox"> |  |
-| con_hour | varchar(200) | 診療時間 | <input type="checkbox"> |  |
-| mon_am | varchar(5) | 月曜午前 | <input type="checkbox"> |  |
-| mon_pm | varchar(5) | 月曜午後 | <input type="checkbox"> |  |
-| tue_am | varchar(5) | 火曜午前 | <input type="checkbox"> |  |
-| tue_pm | varchar(5) | 火曜午後 | <input type="checkbox"> |  |
-| wed_am | varchar(5) | 水曜午前 | <input type="checkbox"> |  |
-| wed_pm | varchar(5) | 水曜午後 | <input type="checkbox"> |  |
-| thr_am | varchar(5) | 木曜午前 | <input type="checkbox"> |  |
-| thr_pm | varchar(5) | 木曜午後 | <input type="checkbox"> |  |
-| fri_am | varchar(5) | 金曜午前 | <input type="checkbox"> |  |
-| fri_pm | varchar(5) | 金曜午後 | <input type="checkbox"> |  |
-| sat_am | varchar(5) | 土曜午前 | <input type="checkbox"> |  |
-| sat_pm | varchar(5) | 土曜午後 | <input type="checkbox"> |  |
-| sun_am | varchar(5) | 日曜午前 | <input type="checkbox"> |  |
-| sun_pm | varchar(5) | 日曜午後 | <input type="checkbox"> |  |
-| holiday | varchar(5) | 祝日 | <input type="checkbox"> |  |
-| int_med | varchar(3) | 内科 | <input type="checkbox"> |  |
-| ped_med | varchar(3) | 小児科 | <input type="checkbox"> |  |
-| sur_med | varchar(3) | 外科 | <input type="checkbox"> |  |
-| ort_med | varchar(3) | 整形外科 | <input type="checkbox"> |  |
-| oph_med | varchar(3) | 眼科 | <input type="checkbox"> |  |
-| ent_med | varchar(3) | 耳鼻咽喉科 | <input type="checkbox"> |  |
-| so_med | varchar(3) | 皮膚科 | <input type="checkbox"> |  |
-| gyn_med | varchar(3) | 産婦人科 | <input type="checkbox"> |  |
-| psy_med | varchar(3) | 精神科 | <input type="checkbox"> |  |
-| den_med | varchar(3) | 歯科 | <input type="checkbox"> |  |
-| etc_med | varchar(3) | その他診療科 | <input type="checkbox"> |  |
-| int_int | varchar(3) | 内科（内科） | <input type="checkbox"> |  |
-| int_dig | varchar(3) | 消化器内科 | <input type="checkbox"> |  |
-| int_uri | varchar(3) | 泌尿器内科 | <input type="checkbox"> |  |
-| int_tum | varchar(3) | 腫瘍内科 | <input type="checkbox"> |  |
-| int_res | varchar(3) | 呼吸器内科 | <input type="checkbox"> |  |
-| int_kid | varchar(3) | 腎臓内科 | <input type="checkbox"> |  |
-| int_blo | varchar(3) | 血液内科 | <input type="checkbox"> |  |
-| int_apo | varchar(3) | 神経内科 | <input type="checkbox"> |  |
-| int_cir | varchar(3) | 循環器内科 | <input type="checkbox"> |  |
-| int_ner | varchar(3) | 神経内科 | <input type="checkbox"> |  |
-| int_inf | varchar(3) | 感染症内科 | <input type="checkbox"> |  |
-| ped_ped | varchar(3) | 小児科（小児科） | <input type="checkbox"> |  |
-| ped_sur | varchar(3) | 小児外科 | <input type="checkbox"> |  |
-| ped_neo | varchar(3) | 新生児科 | <input type="checkbox"> |  |
-| sur_sur | varchar(3) | 外科（外科） | <input type="checkbox"> |  |
-| sur_lac | varchar(3) | 乳腺外科 | <input type="checkbox"> |  |
-| sur_ner | varchar(3) | 脳神経外科 | <input type="checkbox"> |  |
-| sur_nes | varchar(3) | 脳神経外科 | <input type="checkbox"> |  |
-| sur_dig | varchar(3) | 消化器外科 | <input type="checkbox"> |  |
-| sur_car | varchar(3) | 心臓血管外科 | <input type="checkbox"> |  |
-| sur_ven | varchar(3) | 血管外科 | <input type="checkbox"> |  |
-| ort_rhe | varchar(3) | リウマチ科 | <input type="checkbox"> |  |
-| ort_cos | varchar(3) | 美容外科 | <input type="checkbox"> |  |
-| ort_ort | varchar(3) | 整形外科（整形外科） | <input type="checkbox"> |  |
-| ort_reh | varchar(3) | リハビリテーション科 | <input type="checkbox"> |  |
-| ort_pla | varchar(3) | 形成外科 | <input type="checkbox"> |  |
-| oph_oph | varchar(3) | 眼科（眼科） | <input type="checkbox"> |  |
-| ent_ent | varchar(3) | 耳鼻咽喉科（耳鼻咽喉科） | <input type="checkbox"> |  |
-| ent_to | varchar(3) | 頭頸部外科 | <input type="checkbox"> |  |
-| so_sky | varchar(3) | 皮膚科（皮膚科） | <input type="checkbox"> |  |
-| so_org | varchar(3) | 美容皮膚科 | <input type="checkbox"> |  |
-| gyn_gyn | varchar(3) | 産婦人科（産婦人科） | <input type="checkbox"> |  |
-| gyn_obs | varchar(3) | 産科 | <input type="checkbox"> |  |
-| gyn_gyne | varchar(3) | 婦人科 | <input type="checkbox"> |  |
-| psy_psy | varchar(3) | 精神科（精神科） | <input type="checkbox"> |  |
-| psy_psyc | varchar(3) | 心療内科 | <input type="checkbox"> |  |
-| den_den | varchar(3) | 歯科（歯科） | <input type="checkbox"> |  |
-| den_cav | varchar(3) | 口腔外科 | <input type="checkbox"> |  |
-| den_ref | varchar(3) | 矯正歯科 | <input type="checkbox"> |  |
-| den_ped | varchar(3) | 小児歯科 | <input type="checkbox"> |  |
-| alle | varchar(3) | アレルギー科 | <input type="checkbox"> |  |
-| pat | varchar(3) | 病理診断科 | <input type="checkbox"> |  |
-| checkup | varchar(3) | 健診 | <input type="checkbox"> |  |
-| rad | varchar(3) | 放射線科 | <input type="checkbox"> |  |
-| cli | varchar(3) | 臨床検査科 | <input type="checkbox"> |  |
-| ane | varchar(3) | 麻酔科 | <input type="checkbox"> |  |
-| eme | varchar(3) | 救急科 | <input type="checkbox"> |  |
+| zipcode | varchar(7) | 郵便番号 | <input type="checkbox" checked> |  |
+| ad | varchar(400) | 住所 | <input type="checkbox" checked> |  |
+| tel | varchar(20) | 電話番号 | <input type="checkbox" checked> |  |
+| fax | varchar(20) | FAX番号 | <input type="checkbox" checked> |  |
+| email | varchar(254) | メールアドレス | <input type="checkbox" checked> |  |
+| are_cd | int(11) | 地域コード | <input type="checkbox" checked> |  |
+| pre | varchar(10) | 都道府県 | <input type="checkbox" checked> |  |
+| area | varchar(40) | エリア | <input type="checkbox" checked> |  |
+| city | varchar(40) | 市 | <input type="checkbox" checked> |  |
+| zone | varchar(40) | 区 | <input type="checkbox" checked> |  |
+| town | varchar(40) | 町 | <input type="checkbox" checked> |  |
+| str_num | varchar(200) | 番地 | <input type="checkbox" checked> |  |
+| note | varchar(1000) | 備考 | <input type="checkbox" checked> |  |
+| clo_day | varchar(20) | 休診日 | <input type="checkbox" checked> |  |
+| chi_name | varchar(60) | 理事長氏名 | <input type="checkbox" checked> |  |
+| chi_spe | varchar(20) | 理事長専門 | <input type="checkbox" checked> |  |
+| chi_year | varchar(7) | 理事長卒業年 | <input type="checkbox" checked> |  |
+| chi_sch | varchar(50) | 理事長学校 | <input type="checkbox" checked> |  |
+| chi_note | varchar(100) | 理事長備考 | <input type="checkbox" checked> |  |
+| pre_name | varchar(60) | 院長氏名 | <input type="checkbox" checked> |  |
+| pre_spe | varchar(20) | 院長専門 | <input type="checkbox" checked> |  |
+| pre_year | varchar(7) | 院長卒業年 | <input type="checkbox" checked> |  |
+| pre_sch | varchar(50) | 院長学校 | <input type="checkbox" checked> |  |
+| pre_note | varchar(100) | 院長備考 | <input type="checkbox" checked> |  |
+| con_hour | varchar(200) | 診療時間 | <input type="checkbox" checked> |  |
+| mon_am | varchar(5) | 月曜午前 | <input type="checkbox" checked> |  |
+| mon_pm | varchar(5) | 月曜午後 | <input type="checkbox" checked> |  |
+| tue_am | varchar(5) | 火曜午前 | <input type="checkbox" checked> |  |
+| tue_pm | varchar(5) | 火曜午後 | <input type="checkbox" checked> |  |
+| wed_am | varchar(5) | 水曜午前 | <input type="checkbox" checked> |  |
+| wed_pm | varchar(5) | 水曜午後 | <input type="checkbox" checked> |  |
+| thr_am | varchar(5) | 木曜午前 | <input type="checkbox" checked> |  |
+| thr_pm | varchar(5) | 木曜午後 | <input type="checkbox" checked> |  |
+| fri_am | varchar(5) | 金曜午前 | <input type="checkbox" checked> |  |
+| fri_pm | varchar(5) | 金曜午後 | <input type="checkbox" checked> |  |
+| sat_am | varchar(5) | 土曜午前 | <input type="checkbox" checked> |  |
+| sat_pm | varchar(5) | 土曜午後 | <input type="checkbox" checked> |  |
+| sun_am | varchar(5) | 日曜午前 | <input type="checkbox" checked> |  |
+| sun_pm | varchar(5) | 日曜午後 | <input type="checkbox" checked> |  |
+| holiday | varchar(5) | 祝日 | <input type="checkbox" checked> |  |
+| int_med | varchar(3) | 内科 | <input type="checkbox" checked> |  |
+| ped_med | varchar(3) | 小児科 | <input type="checkbox" checked> |  |
+| sur_med | varchar(3) | 外科 | <input type="checkbox" checked> |  |
+| ort_med | varchar(3) | 整形外科 | <input type="checkbox" checked> |  |
+| oph_med | varchar(3) | 眼科 | <input type="checkbox" checked> |  |
+| ent_med | varchar(3) | 耳鼻咽喉科 | <input type="checkbox" checked> |  |
+| so_med | varchar(3) | 皮膚科 | <input type="checkbox" checked> |  |
+| gyn_med | varchar(3) | 産婦人科 | <input type="checkbox" checked> |  |
+| psy_med | varchar(3) | 精神科 | <input type="checkbox" checked> |  |
+| den_med | varchar(3) | 歯科 | <input type="checkbox" checked> |  |
+| etc_med | varchar(3) | その他診療科 | <input type="checkbox" checked> |  |
+| int_int | varchar(3) | 内科（内科） | <input type="checkbox" checked> |  |
+| int_dig | varchar(3) | 消化器内科 | <input type="checkbox" checked> |  |
+| int_uri | varchar(3) | 泌尿器内科 | <input type="checkbox" checked> |  |
+| int_tum | varchar(3) | 腫瘍内科 | <input type="checkbox" checked> |  |
+| int_res | varchar(3) | 呼吸器内科 | <input type="checkbox" checked> |  |
+| int_kid | varchar(3) | 腎臓内科 | <input type="checkbox" checked> |  |
+| int_blo | varchar(3) | 血液内科 | <input type="checkbox" checked> |  |
+| int_apo | varchar(3) | 神経内科 | <input type="checkbox" checked> |  |
+| int_cir | varchar(3) | 循環器内科 | <input type="checkbox" checked> |  |
+| int_ner | varchar(3) | 神経内科 | <input type="checkbox" checked> |  |
+| int_inf | varchar(3) | 感染症内科 | <input type="checkbox" checked> |  |
+| ped_ped | varchar(3) | 小児科（小児科） | <input type="checkbox" checked> |  |
+| ped_sur | varchar(3) | 小児外科 | <input type="checkbox" checked> |  |
+| ped_neo | varchar(3) | 新生児科 | <input type="checkbox" checked> |  |
+| sur_sur | varchar(3) | 外科（外科） | <input type="checkbox" checked> |  |
+| sur_lac | varchar(3) | 乳腺外科 | <input type="checkbox" checked> |  |
+| sur_ner | varchar(3) | 脳神経外科 | <input type="checkbox" checked> |  |
+| sur_nes | varchar(3) | 脳神経外科 | <input type="checkbox" checked> |  |
+| sur_dig | varchar(3) | 消化器外科 | <input type="checkbox" checked> |  |
+| sur_car | varchar(3) | 心臓血管外科 | <input type="checkbox" checked> |  |
+| sur_ven | varchar(3) | 血管外科 | <input type="checkbox" checked> |  |
+| ort_rhe | varchar(3) | リウマチ科 | <input type="checkbox" checked> |  |
+| ort_cos | varchar(3) | 美容外科 | <input type="checkbox" checked> |  |
+| ort_ort | varchar(3) | 整形外科（整形外科） | <input type="checkbox" checked> |  |
+| ort_reh | varchar(3) | リハビリテーション科 | <input type="checkbox" checked> |  |
+| ort_pla | varchar(3) | 形成外科 | <input type="checkbox" checked> |  |
+| oph_oph | varchar(3) | 眼科（眼科） | <input type="checkbox" checked> |  |
+| ent_ent | varchar(3) | 耳鼻咽喉科（耳鼻咽喉科） | <input type="checkbox" checked> |  |
+| ent_to | varchar(3) | 頭頸部外科 | <input type="checkbox" checked> |  |
+| so_sky | varchar(3) | 皮膚科（皮膚科） | <input type="checkbox" checked> |  |
+| so_org | varchar(3) | 美容皮膚科 | <input type="checkbox" checked> |  |
+| gyn_gyn | varchar(3) | 産婦人科（産婦人科） | <input type="checkbox" checked> |  |
+| gyn_obs | varchar(3) | 産科 | <input type="checkbox" checked> |  |
+| gyn_gyne | varchar(3) | 婦人科 | <input type="checkbox" checked> |  |
+| psy_psy | varchar(3) | 精神科（精神科） | <input type="checkbox" checked> |  |
+| psy_psyc | varchar(3) | 心療内科 | <input type="checkbox" checked> |  |
+| den_den | varchar(3) | 歯科（歯科） | <input type="checkbox" checked> |  |
+| den_cav | varchar(3) | 口腔外科 | <input type="checkbox" checked> |  |
+| den_ref | varchar(3) | 矯正歯科 | <input type="checkbox" checked> |  |
+| den_ped | varchar(3) | 小児歯科 | <input type="checkbox" checked> |  |
+| alle | varchar(3) | アレルギー科 | <input type="checkbox" checked> |  |
+| pat | varchar(3) | 病理診断科 | <input type="checkbox" checked> |  |
+| checkup | varchar(3) | 健診 | <input type="checkbox" checked> |  |
+| rad | varchar(3) | 放射線科 | <input type="checkbox" checked> |  |
+| cli | varchar(3) | 臨床検査科 | <input type="checkbox" checked> |  |
+| ane | varchar(3) | 麻酔科 | <input type="checkbox" checked> |  |
+| eme | varchar(3) | 救急科 | <input type="checkbox" checked> |  |
 | bed | int(11) | 病床数 | <input type="checkbox" checked> |  |
 | bed_reh | varchar(3) | リハビリ病床 | <input type="checkbox" checked> |  |
 | bed_tre | varchar(3) | 療養病床 | <input type="checkbox" checked> |  |
@@ -407,15 +407,15 @@
 
 | カラム名 | データ型 | 説明 | 移行済み | 備考 |
 |---------|---------|------|---------|------|
-| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox"> |  |
-| med_1 | int(11) | 診療内容1 | <input type="checkbox"> |  |
-| med_2 | int(11) | 診療内容2 | <input type="checkbox"> |  |
-| med_3 | int(11) | 診療内容3 | <input type="checkbox"> |  |
-| med_4 | int(11) | 診療内容4 | <input type="checkbox"> |  |
-| med_5 | int(11) | 診療内容5 | <input type="checkbox"> |  |
-| ... | ... | *med_164まで連続* | <input type="checkbox"> | *med_6～med_164は省略* |
-| med_note | varchar(1000) | 診療内容備考 | <input type="checkbox"> |  |
-| delete_flg | int(11) | 削除フラグ | <input type="checkbox"> |  |
+| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox" checked> |  |
+| med_1 | int(11) | 診療内容1 | <input type="checkbox" checked> |  |
+| med_2 | int(11) | 診療内容2 | <input type="checkbox" checked> |  |
+| med_3 | int(11) | 診療内容3 | <input type="checkbox" checked> |  |
+| med_4 | int(11) | 診療内容4 | <input type="checkbox" checked> |  |
+| med_5 | int(11) | 診療内容5 | <input type="checkbox" checked> |  |
+| ... | ... | *med_164まで連続* | <input type="checkbox" checked> | *med_6～med_164は省略* |
+| med_note | varchar(1000) | 診療内容備考 | <input type="checkbox" checked> |  |
+| delete_flg | int(11) | 削除フラグ | <input type="checkbox" checked> |  |
 
 ---
 
@@ -424,9 +424,9 @@
 | カラム名 | データ型 | 説明 | 移行済み | 備考 |
 |---------|---------|------|---------|------|
 | med_code | int(11) | 診療内容コード | <input type="checkbox"> |  |
-| med_div | varchar(50) | 診療区分 | <input type="checkbox"> |  |
-| med_dep | varchar(100) | 診療部門 | <input type="checkbox"> |  |
-| med_det | varchar(300) | 診療詳細 | <input type="checkbox"> |  |
+| med_div | varchar(50) | 診療区分 | <input type="checkbox" checked> |  |
+| med_dep | varchar(100) | 診療部門 | <input type="checkbox" checked> |  |
+| med_det | varchar(300) | 診療詳細 | <input type="checkbox" checked> |  |
 
 ---
 
@@ -528,49 +528,6 @@
 
 ---
 
-## test テーブル（テスト用）
-
-| カラム名 | データ型 | 説明 | 移行済み | 備考 |
-|---------|---------|------|---------|------|
-| カラム 1 | varchar(50) | カラム1 | <input type="checkbox"> |  |
-
----
-
-## test_intro テーブル（テスト紹介）
-
-| カラム名 | データ型 | 説明 | 移行済み | 備考 |
-|---------|---------|------|---------|------|
-| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox"> |  |
-| ins | int(11) | 施設区分（0:附属 1:総合） | <input type="checkbox"> |  |
-| fie_name | varchar(30) | 診療科 | <input type="checkbox"> |  |
-| year | year(4) | 年度 | <input type="checkbox"> |  |
-| intr | int(11) | 紹介件数 | <input type="checkbox"> |  |
-
----
-
-## test_invers_intro テーブル（テスト逆紹介）
-
-| カラム名 | データ型 | 説明 | 移行済み | 備考 |
-|---------|---------|------|---------|------|
-| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox"> |  |
-| ins | int(11) | 施設区分（0:附属 1:総合） | <input type="checkbox"> |  |
-| fie_name | varchar(30) | 診療科 | <input type="checkbox"> |  |
-| year | year(4) | 年度 | <input type="checkbox"> |  |
-| invr_intr | int(11) | 逆紹介件数 | <input type="checkbox"> |  |
-
----
-
-## tmp1 テーブル（一時保存用テーブル）
-
-*mainテーブルの構造 + 以下の追加カラム*
-
-| カラム名 | データ型 | 説明 | 移行済み | 備考 |
-|---------|---------|------|---------|------|
-| intr | int(11) | 紹介件数 | <input type="checkbox"> |  |
-| invr_intr | int(11) | 逆紹介件数 | <input type="checkbox"> |  |
-
----
-
 ## training テーブル（兼業）
 
 | カラム名 | データ型 | 説明 | 移行済み | 備考 |
@@ -618,17 +575,17 @@
 
 | カラム名 | データ型 | 説明 | 移行済み | 備考 |
 |---------|---------|------|---------|------|
-| user_id | varchar(10) | ユーザーID | <input type="checkbox"> |  |
-| user_name | varchar(50) | ユーザー名 | <input type="checkbox"> |  |
-| ins | varchar(10) | 所属施設 | <input type="checkbox"> |  |
-| bel | varchar(30) | 所属部署 | <input type="checkbox"> |  |
-| pw | varchar(255) | パスワード | <input type="checkbox"> |  |
-| adm_user | int(11) | 管理者ユーザー | <input type="checkbox"> |  |
-| edi_user | int(11) | 編集者ユーザー | <input type="checkbox"> |  |
-| start | varchar(30) | 開始日 | <input type="checkbox"> |  |
-| end | varchar(30) | 終了日 | <input type="checkbox"> |  |
-| onf | int(11) | オンフラグ | <input type="checkbox"> |  |
-| up_date | varchar(1000) | 更新日 | <input type="checkbox"> |  |
+| user_id | varchar(10) | ユーザーID | <input type="checkbox" checked> |  |
+| user_name | varchar(50) | ユーザー名 | <input type="checkbox" checked> |  |
+| ins | varchar(10) | 所属施設 | <input type="checkbox" checked> |  |
+| bel | varchar(30) | 所属部署 | <input type="checkbox" checked> |  |
+| pw | varchar(255) | パスワード | <input type="checkbox" checked> |  |
+| adm_user | int(11) | 管理者ユーザー | <input type="checkbox" checked> |  |
+| edi_user | int(11) | 編集者ユーザー | <input type="checkbox" checked> |  |
+| start | varchar(30) | 開始日 | <input type="checkbox" checked> |  |
+| end | varchar(30) | 終了日 | <input type="checkbox" checked> |  |
+| onf | int(11) | オンフラグ | <input type="checkbox" checked> |  |
+| up_date | varchar(1000) | 更新日 | <input type="checkbox" checked> |  |
 
 ---
 

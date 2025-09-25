@@ -11,17 +11,13 @@
 | hospital_type_id | varchar(11) | FOREIGN KEY | 病院区分ID |
 | hospital_name | varchar(100) | NOT NULL | 医療機関名 |
 | status | enum('active','closed') | DEFAULT 'active' | 運営状況 |
+| bed_count | int(11) | DEFAULT 0 | 許可病床数 |
+| consultation_hour | varchar(200) | NULL | 診療時間 |
 | has_pt | boolean | DEFAULT false | 理学療法士在籍フラグ |
 | has_ot | boolean | DEFAULT false | 作業療法士在籍フラグ |
 | has_st | boolean | DEFAULT false | 言語聴覚療法士在籍フラグ |
-| bed_count | int(11) | DEFAULT 0 | 許可病床数 |
-| bed_rehabilitation | int(11) | DEFAULT 0 | リハビリ病床数 |
-| bed_medical_care | int(11) | DEFAULT 0 | 療養病床数 |
-| bed_general | int(11) | DEFAULT 0 | 一般病床数 |
-| bed_nursing_care | int(11) | DEFAULT 0 | 介護病床数 |
-| bed_conversion | int(11) | DEFAULT 0 | 転換病床数 |
-| bed_psychiatric | int(11) | DEFAULT 0 | 精神病床数 |
-| notes | text | NULL | 備考（基本情報） |
+| notes | text | NULL | 備考 |
+| closed_at | date | NULL | 閉院日 |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
 
@@ -55,10 +51,13 @@
 |-------------|----------|------|------|
 | contact_id | int(11) | PRIMARY KEY AUTO_INCREMENT | 連絡先ID |
 | hospital_id | varchar(10) | FOREIGN KEY NOT NULL | 医療機関コード |
+| contact_detail | varchar(30) | NULL | 連絡先（診療科・部署など） |
 | phone | varchar(20) | NULL | 電話番号 |
 | fax | varchar(20) | NULL | FAX番号 |
 | email | varchar(254) | NULL | メールアドレス |
 | website | varchar(500) | NULL | ウェブサイト |
+| note | text | NULL | 備考 |
+| delete_flag | boolean | DEFAULT false | 削除フラグ |
 
 #### `hospitals_ward_types`(病棟種類テーブル)
 病棟種類を持つかどうかを管理
@@ -103,9 +102,6 @@
 | day_of_week | enum('monday','tuesday','wednesday','thursday','friday','saturday','sunday','holiday') | PRIMARY KEY(複合主キー) | 曜日 |
 | period | enum('AM','PM','AM_PM') | PRIMARY KEY(複合主キー) | 時間帯 |
 | is_available | boolean | DEFAULT true | 診療可否 |
-| start_time | time | NULL | 開始時間 |
-| end_time | time | NULL | 終了時間 |
-| notes | varchar(200) | NULL | 備考 |
 
 ### 4. 診療科系
 
