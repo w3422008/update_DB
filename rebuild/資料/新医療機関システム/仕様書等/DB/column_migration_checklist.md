@@ -100,11 +100,11 @@
 
 | カラム名 | データ型 | 説明 | 移行済み | 備考 |
 |---------|---------|------|---------|------|
-| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox"> |  |
+| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox" checked> |  |
 | hos_name | varchar(100) | 医療機関名 | <input type="checkbox"> |  |
-| log_data | varchar(100) | ログデータ | <input type="checkbox"> |  |
+| log_data | varchar(100) | ログデータ | <input type="checkbox" checked> |  |
 | user_name | varchar(50) | ユーザー名 | <input type="checkbox"> |  |
-| user_id | varchar(10) | ユーザーID | <input type="checkbox"> |  |
+| user_id | varchar(10) | ユーザーID | <input type="checkbox" checked> |  |
 | ins | varchar(10) | 施設 | <input type="checkbox"> |  |
 | bel | varchar(30) | 所属 | <input type="checkbox"> |  |
 | adm_user | varchar(2) | 管理者ユーザー | <input type="checkbox"> |  |
@@ -142,11 +142,11 @@
 
 | カラム名 | データ型 | 説明 | 移行済み | 備考 |
 |---------|---------|------|---------|------|
-| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox"> |  |
+| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox" checked> |  |
 | hos_name | varchar(100) | 医療機関名 | <input type="checkbox"> |  |
-| log_data | varchar(100) | ログデータ | <input type="checkbox"> |  |
+| log_data | varchar(100) | ログデータ | <input type="checkbox" checked> |  |
 | user_name | varchar(50) | ユーザー名 | <input type="checkbox"> |  |
-| user_id | varchar(10) | ユーザーID | <input type="checkbox"> |  |
+| user_id | varchar(10) | ユーザーID | <input type="checkbox" checked> |  |
 | ins | varchar(10) | 施設 | <input type="checkbox"> |  |
 | bel | varchar(30) | 所属 | <input type="checkbox"> |  |
 | adm_user | varchar(2) | 管理者ユーザー | <input type="checkbox"> |  |
@@ -157,13 +157,13 @@
 
 | カラム名 | データ型 | 説明 | 移行済み | 備考 |
 |---------|---------|------|---------|------|
-| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox"> |  |
-| ins | int(11) | 施設区分（0:附属 1:総合） | <input type="checkbox"> |  |
-| year | year(4) | 年度 | <input type="checkbox"> |  |
-| date | date | 診療年月日 | <input type="checkbox"> |  |
-| fie_cd | int(11) | 診療科コード | <input type="checkbox"> |  |
-| fie_name | varchar(30) | 診療科 | <input type="checkbox"> |  |
-| intr | int(11) | 紹介件数 | <input type="checkbox"> |  |
+| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox" checked> |  |
+| ins | int(11) | 施設区分（0:附属 1:総合） | <input type="checkbox" checked> |  |
+| year | year(4) | 年度 | <input type="checkbox" checked> |  |
+| date | date | 診療年月日 | <input type="checkbox" checked> |  |
+| fie_cd | int(11) | 診療科コード | <input type="checkbox" checked> |  |
+| fie_name | varchar(30) | 診療科 | <input type="checkbox" checked> |  |
+| intr | int(11) | 紹介件数 | <input type="checkbox" checked> |  |
 
 ---
 
@@ -532,17 +532,17 @@
 
 | カラム名 | データ型 | 説明 | 移行済み | 備考 |
 |---------|---------|------|---------|------|
-| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox"> |  |
-| year | year(4) | 年度 | <input type="checkbox"> |  |
-| ins | int(11) | 施設区分（0:附属 1:総合） | <input type="checkbox"> |  |
-| tra_name | varchar(200) | 研修先医療機関名 | <input type="checkbox"> |  |
-| dep | varchar(60) | 診療科 | <input type="checkbox"> |  |
-| position | varchar(30) | 職名 | <input type="checkbox"> |  |
-| name | varchar(60) | 氏名 | <input type="checkbox"> |  |
-| start | date | 診療支援開始日 | <input type="checkbox"> |  |
-| end | date | 診療支援終了日 | <input type="checkbox"> |  |
-| dia_div | varchar(50) | 診療支援区分 | <input type="checkbox"> |  |
-| date | varchar(300) | 日付 | <input type="checkbox"> |  |
+| hos_cd | varchar(10) | 医療機関コード | <input type="checkbox" checked> |  |
+| year | year(4) | 年度 | <input type="checkbox" checked> |  |
+| ins | int(11) | 施設区分（0:附属 1:総合） | <input type="checkbox" checked> |  |
+| tra_name | varchar(200) | 研修先医療機関名 | <input type="checkbox" checked> |  |
+| dep | varchar(60) | 診療科 | <input type="checkbox" checked> |  |
+| position | varchar(30) | 職名 | <input type="checkbox" checked> |  |
+| name | varchar(60) | 氏名 | <input type="checkbox" checked> |  |
+| start | date | 診療支援開始日 | <input type="checkbox" checked> |  |
+| end | date | 診療支援終了日 | <input type="checkbox" checked> |  |
+| dia_div | varchar(50) | 診療支援区分 | <input type="checkbox" checked> |  |
+| date | varchar(300) | 日付 | <input type="checkbox" checked> |  |
 
 ---
 

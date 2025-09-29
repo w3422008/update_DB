@@ -57,7 +57,7 @@
 | email | varchar(254) | NULL | メールアドレス |
 | website | varchar(500) | NULL | ウェブサイト |
 | note | text | NULL | 備考 |
-| delete_flag | boolean | DEFAULT false | 削除フラグ |
+| is_deleted | boolean | DEFAULT false | 削除フラグ |
 
 #### `hospitals_ward_types`(病棟種類テーブル)
 病棟種類を持つかどうかを管理
@@ -305,8 +305,8 @@ detail/control/relation_control.phpファイルに内容あり
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| position_id | varchar(20) | PRIMARY KEY | 診療科 |
-| position_name | varchar(60) | NOT NULL | 氏名 |
+| position_id | varchar(20) | PRIMARY KEY | 職名id |
+| position_name | varchar(60) | NOT NULL | 職名 |
 | is_active | boolean | DEFAULT true | 有効フラグ |
 | display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
@@ -349,7 +349,7 @@ detail/control/relation_control.phpファイルに内容あり
 
 ### 11. システム運営管理系
 
-#### `maintenance` テーブル（メンテナンス通知）
+#### `maintenances` テーブル（メンテナンス通知）
 事前メンテナンス通知を管理
 
 | フィールド名 | データ型 | 制約 | 説明 |
@@ -380,7 +380,7 @@ detail/control/relation_control.phpファイルに内容あり
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
 
-#### `message` テーブル（システム更新履歴・要望管理）
+#### `messages` テーブル（システム更新履歴・要望管理）
 システムの更新履歴、実装予定機能掲載、現状報告を管理
 
 | フィールド名 | データ型 | 制約 | 説明 |
@@ -428,3 +428,36 @@ detail/control/relation_control.phpファイルに内容あり
 | is_current | boolean | NOT NULL DEFAULT false | 現在稼働バージョンフラグ |
 | release_notes | text | NULL | リリースノート・変更内容 |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
+
+### 13. 関係者・人物情報系
+
+#### `relatives` テーブル（親族情報）
+医療機関に関連する人物の親族情報を管理
+
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| relative_id | int(11) | PRIMARY KEY AUTO_INCREMENT | 親族ID |
+| hospital_id | varchar(10) | FOREIGN KEY NOT NULL | 医療機関コード |
+| relative_name | varchar(60) | NOT NULL | 人物名 |
+| connection | varchar(30) | NULL | 関係 |
+| school_name | varchar(100) | NULL | 学校名 |
+| entrance_year | year(4) | NULL | 入学年 |
+| graduation_year | year(4) | NULL | 卒業年 |
+| notes | text | NULL | 備考 |
+| is_deleted | boolean | DEFAULT false | 削除フラグ |
+| created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
+
+### 14. 会議・イベント参加系
+
+#### `social_meetings` テーブル（医療連携懇話会参加年度）
+医療連携懇話会への参加年度を管理
+
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| hospital_id | varchar(10) | PRIMARY KEY(複合主キー) FOREIGN KEY | 医療機関コード |
+| user_id | varchar(8) | PRIMARY KEY(複合主キー) FOREIGN KEY | ユーザーID（所属病院情報取得用） |
+| meeting_year | year(4) | PRIMARY KEY(複合主キー) | 参加年度 |
+| is_deleted | boolean | DEFAULT false | 削除フラグ |
+| created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
