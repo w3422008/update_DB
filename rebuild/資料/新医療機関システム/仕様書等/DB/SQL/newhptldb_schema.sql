@@ -23,10 +23,12 @@ CREATE TABLE hospitals (
     hospital_name varchar(100) NOT NULL COMMENT '医療機関名',
     status enum('active','closed') DEFAULT 'active' COMMENT '運営状況',
     bed_count int(11) DEFAULT 0 COMMENT '許可病床数',
+    consultation_hour varchar(200) COMMENT '診療時間',
     has_pt boolean DEFAULT false COMMENT '理学療法士在籍フラグ',
     has_ot boolean DEFAULT false COMMENT '作業療法士在籍フラグ',
     has_st boolean DEFAULT false COMMENT '言語聴覚療法士在籍フラグ',
-    notes text COMMENT '備考（基本情報）',
+    notes text COMMENT '備考',
+    closed_at date COMMENT '閉院日',
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
     updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
     FOREIGN KEY (hospital_type_id) REFERENCES hospital_types(type_id)
@@ -62,10 +64,13 @@ DROP TABLE IF EXISTS contact_details;
 CREATE TABLE contact_details (
     contact_id int(11) PRIMARY KEY AUTO_INCREMENT COMMENT '連絡先ID',
     hospital_id varchar(10) NOT NULL COMMENT '医療機関コード',
+    contact_detail varchar(30) COMMENT '連絡先（診療科・部署など）',
     phone varchar(20) COMMENT '電話番号',
     fax varchar(20) COMMENT 'FAX番号',
     email varchar(254) COMMENT 'メールアドレス',
     website varchar(500) COMMENT 'ウェブサイト',
+    note text COMMENT '備考',
+    is_deleted boolean DEFAULT false COMMENT '削除フラグ',
     FOREIGN KEY (hospital_id) REFERENCES hospitals(hospital_id)
 ) COMMENT = '医療機関の連絡先情報を管理';
 
@@ -98,6 +103,16 @@ CREATE TABLE hospital_staffs (
     notes text COMMENT '備考',
     FOREIGN KEY (hospital_id) REFERENCES hospitals(hospital_id)
 ) COMMENT = '理事長、病院長などの重要人物情報を管理';
+
+DROP TABLE IF EXISTS hospital_code_history;
+CREATE TABLE hospital_code_history (
+    history_id bigint(20) PRIMARY KEY AUTO_INCREMENT COMMENT '履歴ID',
+    hospital_id varchar(10) NOT NULL COMMENT '現在の医療機関コード',
+    former_hospital_id varchar(10) NOT NULL COMMENT '以前の医療機関コード',
+    change_date date COMMENT 'コードが更新された日時',
+    created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '登録日時',
+    FOREIGN KEY (hospital_id) REFERENCES hospitals(hospital_id)
+) COMMENT = '現在の医療機関コードと、過去に使用されていたコードを紐づけ';
 
 DROP TABLE IF EXISTS consultation_hours;
 CREATE TABLE consultation_hours (
@@ -428,6 +443,45 @@ CREATE TABLE system_status (
     FOREIGN KEY (changed_by) REFERENCES users(user_id)
 ) COMMENT = '現在のシステムモードと状態を管理するシンプルなテーブル';
 
+-- =================================================================
+-- 関係者・人物情報系
+-- =================================================================
+
+-- 親族情報テーブル
+DROP TABLE IF EXISTS relatives;
+CREATE TABLE relatives (
+    relative_id int(11) PRIMARY KEY AUTO_INCREMENT COMMENT '親族ID',
+    hospital_id varchar(10) NOT NULL COMMENT '医療機関コード',
+    relative_name varchar(60) NOT NULL COMMENT '人物名',
+    connection varchar(30) COMMENT '関係',
+    school_name varchar(100) COMMENT '学校名',
+    entrance_year year(4) COMMENT '入学年',
+    graduation_year year(4) COMMENT '卒業年',
+    notes text COMMENT '備考',
+    is_deleted boolean DEFAULT false COMMENT '削除フラグ',
+    created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
+    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    FOREIGN KEY (hospital_id) REFERENCES hospitals(hospital_id)
+) COMMENT = '医療機関に関連する人物の親族情報を管理';
+
+-- =================================================================
+-- 会議・イベント参加系
+-- =================================================================
+
+-- 医療連携懇話会参加年度テーブル
+DROP TABLE IF EXISTS social_meetings;
+CREATE TABLE social_meetings (
+    hospital_id varchar(10) COMMENT '医療機関コード',
+    user_id varchar(8) COMMENT 'ユーザーID（所属病院情報取得用）',
+    meeting_year year(4) COMMENT '参加年度',
+    is_deleted boolean DEFAULT false COMMENT '削除フラグ',
+    created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
+    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    PRIMARY KEY (hospital_id, user_id, meeting_year),
+    FOREIGN KEY (hospital_id) REFERENCES hospitals(hospital_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+) COMMENT = '医療連携懇話会への参加年度を管理';
+
 -- 外部キー制約チェックを再度有効化
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -466,6 +520,27 @@ CREATE INDEX idx_inquires_status ON inquires(status);
 CREATE INDEX idx_inquires_priority ON inquires(priority);
 CREATE INDEX idx_inquires_assigned_to ON inquires(assigned_to);
 CREATE INDEX idx_inquires_created_at ON inquires(created_at);
+
+-- hospital_code_historyテーブル
+CREATE INDEX idx_hospital_code_history_hospital_id ON hospital_code_history(hospital_id);
+CREATE INDEX idx_hospital_code_history_former_hospital_id ON hospital_code_history(former_hospital_id);
+CREATE INDEX idx_hospital_code_history_change_date ON hospital_code_history(change_date);
+CREATE INDEX idx_hospital_code_history_created_at ON hospital_code_history(created_at);
+
+-- relativesテーブル
+CREATE INDEX idx_relatives_hospital_id ON relatives(hospital_id);
+CREATE INDEX idx_relatives_relative_name ON relatives(relative_name);
+CREATE INDEX idx_relatives_connection ON relatives(connection);
+CREATE INDEX idx_relatives_graduation_year ON relatives(graduation_year);
+CREATE INDEX idx_relatives_is_deleted ON relatives(is_deleted);
+CREATE INDEX idx_relatives_created_at ON relatives(created_at);
+
+-- social_meetingsテーブル
+CREATE INDEX idx_social_meetings_hospital_id ON social_meetings(hospital_id);
+CREATE INDEX idx_social_meetings_user_id ON social_meetings(user_id);
+CREATE INDEX idx_social_meetings_meeting_year ON social_meetings(meeting_year);
+CREATE INDEX idx_social_meetings_is_deleted ON social_meetings(is_deleted);
+CREATE INDEX idx_social_meetings_created_at ON social_meetings(created_at);
 
 -- =================================================================
 -- 自動ログ記録用トリガー
@@ -763,6 +838,116 @@ FOR EACH ROW BEGIN
                        'status', OLD.status, 'description', OLD.description, 'assigned_to', OLD.assigned_to,
                        'created_at', OLD.created_at, 'updated_at', OLD.updated_at, 'resolved_at', OLD.resolved_at),
             OLD.user_id, NOW());
+END$$
+
+-- hospital_code_history テーブル用トリガー
+CREATE TRIGGER hospital_code_history_insert_audit AFTER INSERT ON hospital_code_history
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, created_at)
+    VALUES ('audit', 'hospital_code_history', NEW.history_id, 'INSERT',
+            JSON_OBJECT('history_id', NEW.history_id, 'hospital_id', NEW.hospital_id, 
+                       'former_hospital_id', NEW.former_hospital_id, 'change_date', NEW.change_date,
+                       'created_at', NEW.created_at),
+            NOW());
+END$$
+
+CREATE TRIGGER hospital_code_history_update_audit AFTER UPDATE ON hospital_code_history
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, created_at)
+    VALUES ('audit', 'hospital_code_history', NEW.history_id, 'UPDATE',
+            JSON_OBJECT('history_id', OLD.history_id, 'hospital_id', OLD.hospital_id, 
+                       'former_hospital_id', OLD.former_hospital_id, 'change_date', OLD.change_date,
+                       'created_at', OLD.created_at),
+            JSON_OBJECT('history_id', NEW.history_id, 'hospital_id', NEW.hospital_id, 
+                       'former_hospital_id', NEW.former_hospital_id, 'change_date', NEW.change_date,
+                       'created_at', NEW.created_at),
+            NOW());
+END$$
+
+CREATE TRIGGER hospital_code_history_delete_audit AFTER DELETE ON hospital_code_history
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
+    VALUES ('audit', 'hospital_code_history', OLD.history_id, 'DELETE',
+            JSON_OBJECT('history_id', OLD.history_id, 'hospital_id', OLD.hospital_id, 
+                       'former_hospital_id', OLD.former_hospital_id, 'change_date', OLD.change_date,
+                       'created_at', OLD.created_at),
+            NOW());
+END$$
+
+-- relatives テーブル用トリガー
+CREATE TRIGGER relatives_insert_audit AFTER INSERT ON relatives
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, created_at)
+    VALUES ('audit', 'relatives', NEW.relative_id, 'INSERT',
+            JSON_OBJECT('relative_id', NEW.relative_id, 'hospital_id', NEW.hospital_id, 
+                       'relative_name', NEW.relative_name, 'connection', NEW.connection,
+                       'school_name', NEW.school_name, 'entrance_year', NEW.entrance_year,
+                       'graduation_year', NEW.graduation_year, 'notes', NEW.notes,
+                       'is_deleted', NEW.is_deleted, 'created_at', NEW.created_at, 'updated_at', NEW.updated_at),
+            NOW());
+END$$
+
+CREATE TRIGGER relatives_update_audit AFTER UPDATE ON relatives
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, created_at)
+    VALUES ('audit', 'relatives', NEW.relative_id, 'UPDATE',
+            JSON_OBJECT('relative_id', OLD.relative_id, 'hospital_id', OLD.hospital_id, 
+                       'relative_name', OLD.relative_name, 'connection', OLD.connection,
+                       'school_name', OLD.school_name, 'entrance_year', OLD.entrance_year,
+                       'graduation_year', OLD.graduation_year, 'notes', OLD.notes,
+                       'is_deleted', OLD.is_deleted, 'created_at', OLD.created_at, 'updated_at', OLD.updated_at),
+            JSON_OBJECT('relative_id', NEW.relative_id, 'hospital_id', NEW.hospital_id, 
+                       'relative_name', NEW.relative_name, 'connection', NEW.connection,
+                       'school_name', NEW.school_name, 'entrance_year', NEW.entrance_year,
+                       'graduation_year', NEW.graduation_year, 'notes', NEW.notes,
+                       'is_deleted', NEW.is_deleted, 'created_at', NEW.created_at, 'updated_at', NEW.updated_at),
+            NOW());
+END$$
+
+CREATE TRIGGER relatives_delete_audit AFTER DELETE ON relatives
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
+    VALUES ('audit', 'relatives', OLD.relative_id, 'DELETE',
+            JSON_OBJECT('relative_id', OLD.relative_id, 'hospital_id', OLD.hospital_id, 
+                       'relative_name', OLD.relative_name, 'connection', OLD.connection,
+                       'school_name', OLD.school_name, 'entrance_year', OLD.entrance_year,
+                       'graduation_year', OLD.graduation_year, 'notes', OLD.notes,
+                       'is_deleted', OLD.is_deleted, 'created_at', OLD.created_at, 'updated_at', OLD.updated_at),
+            NOW());
+END$$
+
+-- social_meetings テーブル用トリガー
+CREATE TRIGGER social_meetings_insert_audit AFTER INSERT ON social_meetings
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, user_id, created_at)
+    VALUES ('audit', 'social_meetings', CONCAT(NEW.hospital_id, '_', NEW.user_id, '_', NEW.meeting_year), 'INSERT',
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'user_id', NEW.user_id, 
+                       'meeting_year', NEW.meeting_year, 'is_deleted', NEW.is_deleted,
+                       'created_at', NEW.created_at, 'updated_at', NEW.updated_at),
+            NEW.user_id, NOW());
+END$$
+
+CREATE TRIGGER social_meetings_update_audit AFTER UPDATE ON social_meetings
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, user_id, created_at)
+    VALUES ('audit', 'social_meetings', CONCAT(NEW.hospital_id, '_', NEW.user_id, '_', NEW.meeting_year), 'UPDATE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'user_id', OLD.user_id, 
+                       'meeting_year', OLD.meeting_year, 'is_deleted', OLD.is_deleted,
+                       'created_at', OLD.created_at, 'updated_at', OLD.updated_at),
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'user_id', NEW.user_id, 
+                       'meeting_year', NEW.meeting_year, 'is_deleted', NEW.is_deleted,
+                       'created_at', NEW.created_at, 'updated_at', NEW.updated_at),
+            NEW.user_id, NOW());
+END$$
+
+CREATE TRIGGER social_meetings_delete_audit AFTER DELETE ON social_meetings
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
+    VALUES ('audit', 'social_meetings', CONCAT(OLD.hospital_id, '_', OLD.user_id, '_', OLD.meeting_year), 'DELETE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'user_id', OLD.user_id, 
+                       'meeting_year', OLD.meeting_year, 'is_deleted', OLD.is_deleted,
+                       'created_at', OLD.created_at, 'updated_at', OLD.updated_at),
+            NOW());
 END$$
 
 DELIMITER ;

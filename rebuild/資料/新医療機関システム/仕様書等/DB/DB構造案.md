@@ -59,6 +59,16 @@
 | note | text | NULL | 備考 |
 | is_deleted | boolean | DEFAULT false | 削除フラグ |
 
+#### `hospital_code_history`(医療機関コード履歴)
+現在の医療機関コードと、過去に使用されていたコードを紐づけ
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| history_id | bigint(20) | PRIMARY KEY  AUTO_INCREMENT | 履歴ID |
+| hospital_id | varchar(10) | FOREIGN KEY NOT NULL | 現在の医療機関コード |
+| former_hospital_id | varchar(10) | NOT NULL | 以前の医療機関コード |
+| change_date | date | NULL | コードが更新された日時 |
+| created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 登録日時 |
+
 #### `hospitals_ward_types`(病棟種類テーブル)
 病棟種類を持つかどうかを管理
 | フィールド名 | データ型 | 制約 | 説明 |
