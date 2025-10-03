@@ -186,7 +186,8 @@ DROP TABLE IF EXISTS clinical_pathway_hospitals;
 CREATE TABLE clinical_pathway_hospitals (
     hospital_id varchar(10) COMMENT '医療機関コード',
     clinical_pathway_id varchar(10) COMMENT '連携パスID',
-    PRIMARY KEY (hospital_id, clinical_pathway_id),
+    user_facility_id varchar(20) COMMENT '登録者所属施設ID',
+    PRIMARY KEY (hospital_id, clinical_pathway_id, user_facility_id),
     FOREIGN KEY (hospital_id) REFERENCES hospitals(hospital_id),
     FOREIGN KEY (clinical_pathway_id) REFERENCES clinical_pathways(clinical_pathway_id)
 ) COMMENT = '地域連携クリニカルパスの存在有無を管理';
@@ -290,15 +291,16 @@ CREATE TABLE unified_logs (
 DROP TABLE IF EXISTS introductions;
 CREATE TABLE introductions (
     hospital_id varchar(10) COMMENT '医療機関コード',
-    user_id varchar(8) COMMENT 'ユーザーID',
-    intro_type enum('intro','inverse_intro') DEFAULT 'intro' COMMENT '紹介・逆紹介判定',
-    year year(4) COMMENT '年度',
+    user_facility_id varchar(20) COMMENT '登録者所属施設ID',
+    year year COMMENT '年度',
     date date COMMENT '診療日',
     department_name varchar(30) COMMENT '診療科',
-    department_code int(11) COMMENT '診療科コード',
-    intro int(11) COMMENT '紹介・逆紹介件数',
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-) COMMENT = '医療機関間の紹介・逆紹介情報を管理';
+    intro_type enum('intro','invers_intro') DEFAULT 'intro' COMMENT '紹介・逆紹介判定',
+    department_id varchar(10) COMMENT '診療科コード',
+    intro_count int(11) NOT NULL COMMENT '紹介・逆紹介件数',
+    PRIMARY KEY (hospital_id, user_facility_id, year, date, department_name, intro_type),
+    FOREIGN KEY (hospital_id) REFERENCES hospitals(hospital_id)
+) COMMENT = '医療機関間の紹介情報を管理';
 
 -- 職名マスタテーブルを追加
 DROP TABLE IF EXISTS positions;
@@ -312,40 +314,39 @@ CREATE TABLE positions (
 DROP TABLE IF EXISTS training;
 CREATE TABLE training (
     hospital_id varchar(10) COMMENT '医療機関コード',
-    user_id varchar(8) COMMENT 'ユーザーID',
-    year year(4) COMMENT '年度',
-    training_name varchar(200) COMMENT '研修先医療機関名',
+    year year COMMENT '年度',
+    user_facility_id varchar(20) COMMENT '登録者所属施設ID',
     department varchar(60) COMMENT '診療科',
-    staff_name varchar(60) COMMENT '氏名',
+    staff_name varchar(60) NOT NULL COMMENT '氏名',
+    position_id varchar(20) COMMENT '職名',
     start_date date COMMENT '診療支援開始日',
     end_date date COMMENT '診療支援終了日',
     date varchar(300) COMMENT '日付',
     diagnostic_aid varchar(50) COMMENT '診療支援区分',
-    position varchar(30) COMMENT '職名',
-    position_id varchar(20) COMMENT '職名ID',
-    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    PRIMARY KEY (hospital_id, year, user_facility_id, department, start_date),
+    FOREIGN KEY (hospital_id) REFERENCES hospitals(hospital_id),
     FOREIGN KEY (position_id) REFERENCES positions(position_id)
-) COMMENT = '院外診療支援・研修情報を管理';
+) COMMENT = '複数の医療機関へ研修・勤務している人物を管理';
 
 DROP TABLE IF EXISTS contacts;
 CREATE TABLE contacts (
     hospital_id varchar(10) COMMENT '医療機関コード',
-    user_id varchar(8) COMMENT 'ユーザーID',
-    hospital_name varchar(100) COMMENT '医療機関名',
     year year(4) COMMENT '年度',
+    user_facility_id varchar(20) COMMENT '登録者所属施設ID',
     date date COMMENT '日付',
-    method varchar(50) COMMENT '方法',
+    method varchar(50) COMMENT '方法（来院、訪問、オンライン等）',
+    external_contact_name varchar(10) NOT NULL COMMENT '連携機関対応者氏名',
     external_department varchar(50) COMMENT '連携機関対応者部署',
     external_position varchar(50) COMMENT '連携機関対応者役職',
-    external_contact_name varchar(10) COMMENT '連携機関対応者氏名',
     external_additional_participants varchar(100) COMMENT '連携機関対応人数・氏名',
+    internal_contact_name varchar(10) NOT NULL COMMENT '当院対応者氏名',
     internal_department varchar(50) COMMENT '当院対応者所属',
-    internal_contact_name varchar(10) COMMENT '当院対応者氏名',
     internal_additional_participants varchar(100) COMMENT '当院対応人数・氏名',
     detail varchar(100) COMMENT '内容',
     notes varchar(100) COMMENT '備考',
-    data_department varchar(50) COMMENT 'データ部署',
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    data_department varchar(50) COMMENT 'データ作成部署',
+    PRIMARY KEY (hospital_id, year, user_facility_id, date, method),
+    FOREIGN KEY (hospital_id) REFERENCES hospitals(hospital_id)
 ) COMMENT = '医療機関同士のコンタクト履歴を保管';
 
 -- 問い合わせテーブル
@@ -370,8 +371,8 @@ CREATE TABLE inquires (
 -- =================================================================
 
 -- メンテナンス通知テーブル
-DROP TABLE IF EXISTS maintenance;
-CREATE TABLE maintenance (
+DROP TABLE IF EXISTS maintenances;
+CREATE TABLE maintenances (
     maintenance_id bigint(20) PRIMARY KEY AUTO_INCREMENT COMMENT 'メンテナンスID',
     title varchar(200) NOT NULL COMMENT 'タイトル',
     comment text NOT NULL COMMENT '実施内容',
@@ -397,7 +398,7 @@ CREATE TABLE maintenance_start (
     created_by varchar(8) NOT NULL COMMENT '作成者ユーザーID',
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
     updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
-    FOREIGN KEY (maintenance_id) REFERENCES maintenance(maintenance_id),
+    FOREIGN KEY (maintenance_id) REFERENCES maintenances(maintenance_id),
     FOREIGN KEY (created_by) REFERENCES users(user_id)
 ) COMMENT = 'メンテナンス実行中の通知を管理';
 
@@ -413,15 +414,14 @@ CREATE TABLE system_versions (
 ) COMMENT = 'システムのバージョン情報を最小限で管理';
 
 -- メッセージテーブル（システム更新履歴・要望管理）
-DROP TABLE IF EXISTS message;
-CREATE TABLE message (
+DROP TABLE IF EXISTS messages;
+CREATE TABLE messages (
     message_id bigint(20) PRIMARY KEY AUTO_INCREMENT COMMENT 'メッセージID',
     status enum('open','in_progress','completed','rejected') DEFAULT 'open' COMMENT '対応状況',
     comment text NOT NULL COMMENT '内容',
     view boolean NOT NULL DEFAULT true COMMENT '表示フラグ',
     version_id int(11) NULL COMMENT '実装バージョンID',
-    assigned_to varchar(8) NOT NULL COMMENT '担当者ユーザーID',
-    priority enum('low','normal','urgent') DEFAULT 'normal' COMMENT '優先度',
+    assigned_to varchar(8) COMMENT '担当者ユーザーID',
     res_date date NULL COMMENT '対応日',
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
     updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
@@ -439,7 +439,7 @@ CREATE TABLE system_status (
     changed_by varchar(8) NOT NULL COMMENT '状態変更者ユーザーID',
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
     updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
-    FOREIGN KEY (maintenance_id) REFERENCES maintenance(maintenance_id),
+    FOREIGN KEY (maintenance_id) REFERENCES maintenances(maintenance_id),
     FOREIGN KEY (changed_by) REFERENCES users(user_id)
 ) COMMENT = '現在のシステムモードと状態を管理するシンプルなテーブル';
 
@@ -472,14 +472,13 @@ CREATE TABLE relatives (
 DROP TABLE IF EXISTS social_meetings;
 CREATE TABLE social_meetings (
     hospital_id varchar(10) COMMENT '医療機関コード',
-    user_id varchar(8) COMMENT 'ユーザーID（所属病院情報取得用）',
+    user_facility_id varchar(20) COMMENT '登録者所属施設ID',
     meeting_year year(4) COMMENT '参加年度',
     is_deleted boolean DEFAULT false COMMENT '削除フラグ',
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
     updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
-    PRIMARY KEY (hospital_id, user_id, meeting_year),
-    FOREIGN KEY (hospital_id) REFERENCES hospitals(hospital_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    PRIMARY KEY (hospital_id, user_facility_id, meeting_year),
+    FOREIGN KEY (hospital_id) REFERENCES hospitals(hospital_id)
 ) COMMENT = '医療連携懇話会への参加年度を管理';
 
 -- 外部キー制約チェックを再度有効化
@@ -489,10 +488,10 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- インデックス追加（パフォーマンス向上）
 -- =================================================================
 
--- maintenanceテーブル
-CREATE INDEX idx_maintenance_date ON maintenance(date);
-CREATE INDEX idx_maintenance_view ON maintenance(view);
-CREATE INDEX idx_maintenance_created_by ON maintenance(created_by);
+-- maintenancesテーブル
+CREATE INDEX idx_maintenances_date ON maintenances(date);
+CREATE INDEX idx_maintenances_view ON maintenances(view);
+CREATE INDEX idx_maintenances_created_by ON maintenances(created_by);
 
 -- maintenance_startテーブル
 CREATE INDEX idx_maintenance_start_maintenance_id ON maintenance_start(maintenance_id);
@@ -502,12 +501,11 @@ CREATE INDEX idx_maintenance_start_view ON maintenance_start(view);
 CREATE INDEX idx_system_versions_is_current ON system_versions(is_current);
 CREATE INDEX idx_system_versions_release_date ON system_versions(release_date);
 
--- messageテーブル
-CREATE INDEX idx_message_status ON message(status);
-CREATE INDEX idx_message_priority ON message(priority);
-CREATE INDEX idx_message_assigned_to ON message(assigned_to);
-CREATE INDEX idx_message_version_id ON message(version_id);
-CREATE INDEX idx_message_created_at ON message(created_at);
+-- messagesテーブル
+CREATE INDEX idx_messages_status ON messages(status);
+CREATE INDEX idx_messages_assigned_to ON messages(assigned_to);
+CREATE INDEX idx_messages_version_id ON messages(version_id);
+CREATE INDEX idx_messages_created_at ON messages(created_at);
 
 -- system_statusテーブル
 CREATE INDEX idx_system_status_system_mode ON system_status(system_mode);
@@ -537,7 +535,7 @@ CREATE INDEX idx_relatives_created_at ON relatives(created_at);
 
 -- social_meetingsテーブル
 CREATE INDEX idx_social_meetings_hospital_id ON social_meetings(hospital_id);
-CREATE INDEX idx_social_meetings_user_id ON social_meetings(user_id);
+CREATE INDEX idx_social_meetings_user_facility_id ON social_meetings(user_facility_id);
 CREATE INDEX idx_social_meetings_meeting_year ON social_meetings(meeting_year);
 CREATE INDEX idx_social_meetings_is_deleted ON social_meetings(is_deleted);
 CREATE INDEX idx_social_meetings_created_at ON social_meetings(created_at);
@@ -587,7 +585,7 @@ CREATE TRIGGER users_insert_audit AFTER INSERT ON users
 FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, user_id, created_at)
     VALUES ('audit', 'users', NEW.user_id, 'INSERT', 
-            JSON_OBJECT('user_id', NEW.user_id, 'username', NEW.username, 'facility_id', NEW.facility_id, 
+            JSON_OBJECT('user_id', NEW.user_id, 'user_name', NEW.user_name, 'facility_id', NEW.facility_id, 
                        'department_id', NEW.department_id, 'role', NEW.role, 'is_active', NEW.is_active,
                        'created_at', NEW.created_at, 'updated_at', NEW.updated_at, 'last_login_at', NEW.last_login_at),
             NEW.user_id, NOW());
@@ -597,10 +595,10 @@ CREATE TRIGGER users_update_audit AFTER UPDATE ON users
 FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, user_id, created_at)
     VALUES ('audit', 'users', NEW.user_id, 'UPDATE',
-            JSON_OBJECT('user_id', OLD.user_id, 'username', OLD.username, 'facility_id', OLD.facility_id, 
+            JSON_OBJECT('user_id', OLD.user_id, 'user_name', OLD.user_name, 'facility_id', OLD.facility_id, 
                        'department_id', OLD.department_id, 'role', OLD.role, 'is_active', OLD.is_active,
                        'created_at', OLD.created_at, 'updated_at', OLD.updated_at, 'last_login_at', OLD.last_login_at),
-            JSON_OBJECT('user_id', NEW.user_id, 'username', NEW.username, 'facility_id', NEW.facility_id, 
+            JSON_OBJECT('user_id', NEW.user_id, 'user_name', NEW.user_name, 'facility_id', NEW.facility_id, 
                        'department_id', NEW.department_id, 'role', NEW.role, 'is_active', NEW.is_active,
                        'created_at', NEW.created_at, 'updated_at', NEW.updated_at, 'last_login_at', NEW.last_login_at),
             NEW.user_id, NOW());
@@ -610,7 +608,7 @@ CREATE TRIGGER users_delete_audit AFTER DELETE ON users
 FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
     VALUES ('audit', 'users', OLD.user_id, 'DELETE',
-            JSON_OBJECT('user_id', OLD.user_id, 'username', OLD.username, 'facility_id', OLD.facility_id, 
+            JSON_OBJECT('user_id', OLD.user_id, 'user_name', OLD.user_name, 'facility_id', OLD.facility_id, 
                        'department_id', OLD.department_id, 'role', OLD.role, 'is_active', OLD.is_active,
                        'created_at', OLD.created_at, 'updated_at', OLD.updated_at, 'last_login_at', OLD.last_login_at),
             NOW());
@@ -683,34 +681,34 @@ END$$
 -- introductions テーブル用トリガー
 CREATE TRIGGER introductions_insert_audit AFTER INSERT ON introductions
 FOR EACH ROW BEGIN
-    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, user_id, created_at)
-    VALUES ('audit', 'introductions', CONCAT(NEW.hospital_id, '_', NEW.user_id, '_', NEW.year, '_', NEW.date), 'INSERT', 
-            JSON_OBJECT('hospital_id', NEW.hospital_id, 'user_id', NEW.user_id, 'intro_type', NEW.intro_type, 
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, created_at)
+    VALUES ('audit', 'introductions', CONCAT(NEW.hospital_id, '_', NEW.user_facility_id, '_', NEW.year, '_', NEW.date), 'INSERT', 
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'user_facility_id', NEW.user_facility_id, 'intro_type', NEW.intro_type, 
                        'year', NEW.year, 'date', NEW.date, 'department_name', NEW.department_name, 
-                       'department_code', NEW.department_code, 'intro', NEW.intro),
-            NEW.user_id, NOW());
+                       'department_id', NEW.department_id, 'intro_count', NEW.intro_count),
+            NOW());
 END$$
 
 CREATE TRIGGER introductions_update_audit AFTER UPDATE ON introductions
 FOR EACH ROW BEGIN
-    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, user_id, created_at)
-    VALUES ('audit', 'introductions', CONCAT(NEW.hospital_id, '_', NEW.user_id, '_', NEW.year, '_', NEW.date), 'UPDATE',
-            JSON_OBJECT('hospital_id', OLD.hospital_id, 'user_id', OLD.user_id, 'intro_type', OLD.intro_type, 
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, created_at)
+    VALUES ('audit', 'introductions', CONCAT(NEW.hospital_id, '_', NEW.user_facility_id, '_', NEW.year, '_', NEW.date), 'UPDATE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'user_facility_id', OLD.user_facility_id, 'intro_type', OLD.intro_type, 
                        'year', OLD.year, 'date', OLD.date, 'department_name', OLD.department_name, 
-                       'department_code', OLD.department_code, 'intro', OLD.intro),
-            JSON_OBJECT('hospital_id', NEW.hospital_id, 'user_id', NEW.user_id, 'intro_type', NEW.intro_type, 
+                       'department_id', OLD.department_id, 'intro_count', OLD.intro_count),
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'user_facility_id', NEW.user_facility_id, 'intro_type', NEW.intro_type, 
                        'year', NEW.year, 'date', NEW.date, 'department_name', NEW.department_name, 
-                       'department_code', NEW.department_code, 'intro', NEW.intro),
-            NEW.user_id, NOW());
+                       'department_id', NEW.department_id, 'intro_count', NEW.intro_count),
+            NOW());
 END$$
 
 CREATE TRIGGER introductions_delete_audit AFTER DELETE ON introductions
 FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
-    VALUES ('audit', 'introductions', CONCAT(OLD.hospital_id, '_', OLD.user_id, '_', OLD.year, '_', OLD.date), 'DELETE',
-            JSON_OBJECT('hospital_id', OLD.hospital_id, 'user_id', OLD.user_id, 'intro_type', OLD.intro_type, 
+    VALUES ('audit', 'introductions', CONCAT(OLD.hospital_id, '_', OLD.user_facility_id, '_', OLD.year, '_', OLD.date), 'DELETE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'user_facility_id', OLD.user_facility_id, 'intro_type', OLD.intro_type, 
                        'year', OLD.year, 'date', OLD.date, 'department_name', OLD.department_name, 
-                       'department_code', OLD.department_code, 'intro', OLD.intro),
+                       'department_id', OLD.department_id, 'intro_count', OLD.intro_count),
             NOW());
 END$$
 
@@ -718,21 +716,21 @@ END$$
 -- システム運営管理系テーブル用トリガー追加
 -- =================================================================
 
--- maintenanceテーブル用監査トリガー
-CREATE TRIGGER maintenance_insert_audit AFTER INSERT ON maintenance
+-- maintenancesテーブル用監査トリガー
+CREATE TRIGGER maintenances_insert_audit AFTER INSERT ON maintenances
 FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, user_id, created_at)
-    VALUES ('audit', 'maintenance', NEW.maintenance_id, 'INSERT', 
+    VALUES ('audit', 'maintenances', NEW.maintenance_id, 'INSERT', 
             JSON_OBJECT('maintenance_id', NEW.maintenance_id, 'title', NEW.title, 'comment', NEW.comment,
                        'date', NEW.date, 'start_time', NEW.start_time, 'end_time', NEW.end_time,
                        'view', NEW.view, 'created_by', NEW.created_by),
             NEW.created_by, NOW());
 END$$
 
-CREATE TRIGGER maintenance_update_audit AFTER UPDATE ON maintenance
+CREATE TRIGGER maintenances_update_audit AFTER UPDATE ON maintenances
 FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, user_id, created_at)
-    VALUES ('audit', 'maintenance', NEW.maintenance_id, 'UPDATE',
+    VALUES ('audit', 'maintenances', NEW.maintenance_id, 'UPDATE',
             JSON_OBJECT('maintenance_id', OLD.maintenance_id, 'title', OLD.title, 'comment', OLD.comment,
                        'date', OLD.date, 'start_time', OLD.start_time, 'end_time', OLD.end_time,
                        'view', OLD.view, 'created_by', OLD.created_by),
@@ -742,43 +740,43 @@ FOR EACH ROW BEGIN
             NEW.created_by, NOW());
 END$$
 
-CREATE TRIGGER maintenance_delete_audit AFTER DELETE ON maintenance
+CREATE TRIGGER maintenances_delete_audit AFTER DELETE ON maintenances
 FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
-    VALUES ('audit', 'maintenance', OLD.maintenance_id, 'DELETE',
+    VALUES ('audit', 'maintenances', OLD.maintenance_id, 'DELETE',
             JSON_OBJECT('maintenance_id', OLD.maintenance_id, 'title', OLD.title, 'comment', OLD.comment,
                        'date', OLD.date, 'start_time', OLD.start_time, 'end_time', OLD.end_time,
                        'view', OLD.view, 'created_by', OLD.created_by),
             NOW());
 END$$
 
--- messageテーブル用監査トリガー
-CREATE TRIGGER message_insert_audit AFTER INSERT ON message
+-- messagesテーブル用監査トリガー
+CREATE TRIGGER messages_insert_audit AFTER INSERT ON messages
 FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, user_id, created_at)
-    VALUES ('audit', 'message', NEW.message_id, 'INSERT', 
+    VALUES ('audit', 'messages', NEW.message_id, 'INSERT', 
             JSON_OBJECT('message_id', NEW.message_id, 'status', NEW.status, 'comment', NEW.comment,
-                       'version_id', NEW.version_id, 'assigned_to', NEW.assigned_to, 'priority', NEW.priority),
+                       'version_id', NEW.version_id, 'assigned_to', NEW.assigned_to),
             NEW.assigned_to, NOW());
 END$$
 
-CREATE TRIGGER message_update_audit AFTER UPDATE ON message
+CREATE TRIGGER messages_update_audit AFTER UPDATE ON messages
 FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, user_id, created_at)
-    VALUES ('audit', 'message', NEW.message_id, 'UPDATE',
+    VALUES ('audit', 'messages', NEW.message_id, 'UPDATE',
             JSON_OBJECT('message_id', OLD.message_id, 'status', OLD.status, 'comment', OLD.comment,
-                       'version_id', OLD.version_id, 'assigned_to', OLD.assigned_to, 'priority', OLD.priority),
+                       'version_id', OLD.version_id, 'assigned_to', OLD.assigned_to),
             JSON_OBJECT('message_id', NEW.message_id, 'status', NEW.status, 'comment', NEW.comment,
-                       'version_id', NEW.version_id, 'assigned_to', NEW.assigned_to, 'priority', NEW.priority),
+                       'version_id', NEW.version_id, 'assigned_to', NEW.assigned_to),
             NEW.assigned_to, NOW());
 END$$
 
-CREATE TRIGGER message_delete_audit AFTER DELETE ON message
+CREATE TRIGGER messages_delete_audit AFTER DELETE ON messages
 FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
-    VALUES ('audit', 'message', OLD.message_id, 'DELETE',
+    VALUES ('audit', 'messages', OLD.message_id, 'DELETE',
             JSON_OBJECT('message_id', OLD.message_id, 'status', OLD.status, 'comment', OLD.comment,
-                       'version_id', OLD.version_id, 'assigned_to', OLD.assigned_to, 'priority', OLD.priority),
+                       'version_id', OLD.version_id, 'assigned_to', OLD.assigned_to),
             NOW());
 END$$
 
@@ -919,32 +917,32 @@ END$$
 -- social_meetings テーブル用トリガー
 CREATE TRIGGER social_meetings_insert_audit AFTER INSERT ON social_meetings
 FOR EACH ROW BEGIN
-    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, user_id, created_at)
-    VALUES ('audit', 'social_meetings', CONCAT(NEW.hospital_id, '_', NEW.user_id, '_', NEW.meeting_year), 'INSERT',
-            JSON_OBJECT('hospital_id', NEW.hospital_id, 'user_id', NEW.user_id, 
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, created_at)
+    VALUES ('audit', 'social_meetings', CONCAT(NEW.hospital_id, '_', NEW.user_facility_id, '_', NEW.meeting_year), 'INSERT',
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'user_facility_id', NEW.user_facility_id, 
                        'meeting_year', NEW.meeting_year, 'is_deleted', NEW.is_deleted,
                        'created_at', NEW.created_at, 'updated_at', NEW.updated_at),
-            NEW.user_id, NOW());
+            NOW());
 END$$
 
 CREATE TRIGGER social_meetings_update_audit AFTER UPDATE ON social_meetings
 FOR EACH ROW BEGIN
-    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, user_id, created_at)
-    VALUES ('audit', 'social_meetings', CONCAT(NEW.hospital_id, '_', NEW.user_id, '_', NEW.meeting_year), 'UPDATE',
-            JSON_OBJECT('hospital_id', OLD.hospital_id, 'user_id', OLD.user_id, 
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, created_at)
+    VALUES ('audit', 'social_meetings', CONCAT(NEW.hospital_id, '_', NEW.user_facility_id, '_', NEW.meeting_year), 'UPDATE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'user_facility_id', OLD.user_facility_id, 
                        'meeting_year', OLD.meeting_year, 'is_deleted', OLD.is_deleted,
                        'created_at', OLD.created_at, 'updated_at', OLD.updated_at),
-            JSON_OBJECT('hospital_id', NEW.hospital_id, 'user_id', NEW.user_id, 
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'user_facility_id', NEW.user_facility_id, 
                        'meeting_year', NEW.meeting_year, 'is_deleted', NEW.is_deleted,
                        'created_at', NEW.created_at, 'updated_at', NEW.updated_at),
-            NEW.user_id, NOW());
+            NOW());
 END$$
 
 CREATE TRIGGER social_meetings_delete_audit AFTER DELETE ON social_meetings
 FOR EACH ROW BEGIN
     INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
-    VALUES ('audit', 'social_meetings', CONCAT(OLD.hospital_id, '_', OLD.user_id, '_', OLD.meeting_year), 'DELETE',
-            JSON_OBJECT('hospital_id', OLD.hospital_id, 'user_id', OLD.user_id, 
+    VALUES ('audit', 'social_meetings', CONCAT(OLD.hospital_id, '_', OLD.user_facility_id, '_', OLD.meeting_year), 'DELETE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'user_facility_id', OLD.user_facility_id, 
                        'meeting_year', OLD.meeting_year, 'is_deleted', OLD.is_deleted,
                        'created_at', OLD.created_at, 'updated_at', OLD.updated_at),
             NOW());
@@ -987,7 +985,7 @@ ORDER BY access_date DESC, access_type;
 CREATE VIEW security_alerts AS
 SELECT 
     ul.*,
-    u.username,
+    u.user_name,
     u.facility_id,
     u.department_id
 FROM unified_logs ul
@@ -1001,7 +999,7 @@ ORDER BY ul.created_at DESC;
 CREATE VIEW user_activity AS
 SELECT 
     u.user_id,
-    u.username,
+    u.user_name,
     u.facility_id,
     u.department_id,
     COUNT(DISTINCT DATE(ul.created_at)) as active_days,
@@ -1012,7 +1010,7 @@ FROM users u
 LEFT JOIN unified_logs ul ON u.user_id = ul.user_id 
 WHERE ul.log_type = 'access'
    AND ul.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-GROUP BY u.user_id, u.username, u.facility_id, u.department_id
+GROUP BY u.user_id, u.user_name, u.facility_id, u.department_id
 ORDER BY last_access DESC;
 
 -- =================================================================
@@ -1037,7 +1035,7 @@ FROM system_status ss
 LEFT JOIN users u ON ss.changed_by = u.user_id
 LEFT JOIN kawasaki_university_facilities uf ON u.facility_id = uf.facility_id
 LEFT JOIN kawasaki_university_departments ud ON u.department_id = ud.department_id
-LEFT JOIN maintenance m ON ss.maintenance_id = m.maintenance_id
+LEFT JOIN maintenances m ON ss.maintenance_id = m.maintenance_id
 ORDER BY ss.created_at DESC
 LIMIT 1;
 
@@ -1075,7 +1073,7 @@ SELECT
         WHEN m.date > CURDATE() THEN '予定'
         ELSE '完了'
     END as status
-FROM maintenance m
+FROM maintenances m
 LEFT JOIN users u ON m.created_by = u.user_id
 LEFT JOIN kawasaki_university_facilities uf ON u.facility_id = uf.facility_id
 LEFT JOIN kawasaki_university_departments ud ON u.department_id = ud.department_id
@@ -1088,7 +1086,6 @@ SELECT
     msg.message_id,
     msg.status,
     msg.comment,
-    msg.priority,
     msg.res_date,
     msg.created_at,
     msg.updated_at,
@@ -1102,19 +1099,13 @@ SELECT
         WHEN msg.status IN ('open', 'in_progress') THEN DATEDIFF(CURDATE(), DATE(msg.created_at))
         ELSE NULL
     END as days_elapsed
-FROM message msg
+FROM messages msg
 LEFT JOIN users u_assigned ON msg.assigned_to = u_assigned.user_id
 LEFT JOIN kawasaki_university_facilities uf_assigned ON u_assigned.facility_id = uf_assigned.facility_id
 LEFT JOIN kawasaki_university_departments ud_assigned ON u_assigned.department_id = ud_assigned.department_id
 LEFT JOIN system_versions sv ON msg.version_id = sv.version_id
 WHERE msg.view = true
-ORDER BY 
-    CASE msg.priority 
-        WHEN 'urgent' THEN 1
-        WHEN 'normal' THEN 2
-        WHEN 'low' THEN 3
-    END,
-    msg.created_at DESC;
+ORDER BY msg.created_at DESC;
 
 -- バージョン管理統計ビュー
 CREATE VIEW version_statistics AS
@@ -1128,7 +1119,7 @@ SELECT
     COUNT(CASE WHEN msg.status = 'in_progress' THEN 1 END) as in_progress_messages,
     COUNT(CASE WHEN msg.status = 'open' THEN 1 END) as open_messages
 FROM system_versions sv
-LEFT JOIN message msg ON sv.version_id = msg.version_id
+LEFT JOIN messages msg ON sv.version_id = msg.version_id
 GROUP BY sv.version_id, sv.version_number, sv.release_date, sv.is_current
 ORDER BY sv.release_date DESC;
 

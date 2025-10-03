@@ -110,7 +110,7 @@
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
 | day_of_week | enum('monday','tuesday','wednesday','thursday','friday','saturday','sunday','holiday') | PRIMARY KEY(複合主キー) | 曜日 |
-| period | enum('AM','PM','AM_PM') | PRIMARY KEY(複合主キー) | 時間帯 |
+| period | enum('AM','PM') | PRIMARY KEY(複合主キー) | 時間帯 |
 | is_available | boolean | DEFAULT true | 診療可否 |
 
 ### 4. 診療科系
@@ -163,6 +163,7 @@
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
 | clinical_pathway_id | varchar(10) | PRIMARY KEY(複合主キー) | 連携パスID |
+| user_facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 登録者所属施設ID |
 
 #### `clinical_pathways`テーブル（連携パスマスタ）
 地域連携クリニカルパス名を管理
@@ -286,7 +287,7 @@ detail/control/relation_control.phpファイルに内容あり
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
-| user_id | varchar(8) | PRIMARY KEY(複合主キー) | ユーザーID（これより附属病院、総合医療センターの情報を取得） |
+| user_facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 登録者所属施設ID |
 | year | year | PRIMARY KEY(複合主キー) | 年度 |
 | date | date | PRIMARY KEY(複合主キー) | 診療日 |
 | department_name | varchar(30) | PRIMARY KEY(複合主キー) | 診療科 |
@@ -301,7 +302,7 @@ detail/control/relation_control.phpファイルに内容あり
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
 | year | year | PRIMARY KEY(複合主キー) | 年度 |
-| user_id | varchar(8) | PRIMARY KEY(複合主キー) | ユーザーID（これより附属病院、総合医療センターの情報を取得） |
+| user_facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 登録者所属施設ID |
 | department | varchar(60) | PRIMARY KEY(複合主キー) | 診療科 |
 | staff_name | varchar(60) | NOT NULL | 氏名 |
 | position_id | varchar(20) | FOREIGN KEY | 職名 |
@@ -327,7 +328,7 @@ detail/control/relation_control.phpファイルに内容あり
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
 | year | year(4) | PRIMARY KEY(複合主キー) | 年度 |
-| user_id | varchar(8) | PRIMARY KEY(複合主キー) | ユーザーID（これより附属病院、総合医療センターの情報を取得） |
+| user_facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 登録者所属施設ID |
 | date | date | PRIMARY KEY(複合主キー) | 日付 |
 | method | varchar(50) | PRIMARY KEY(複合主キー) | 方法（来院、訪問、オンライン等） |
 | external_contact_name | varchar(10) | NOT NULL | 連携機関対応者氏名 |
@@ -401,7 +402,6 @@ detail/control/relation_control.phpファイルに内容あり
 | view | boolean | NOT NULL DEFAULT true | 表示フラグ |
 | version_id | int(11) | FOREIGN KEY NULL | 実装バージョンID |
 | assigned_to | varchar(8) | FOREIGN KEY | 担当者ユーザーID |
-| priority | enum('low','normal','urgent') | DEFAULT 'normal' | 優先度 |
 | res_date | date | NULL | 対応日 |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
@@ -414,7 +414,7 @@ detail/control/relation_control.phpファイルに内容あり
 | status_id | int(11) | PRIMARY KEY AUTO_INCREMENT | 状態ID |
 | system_mode | enum('normal','maintenance','read_only') | DEFAULT 'normal' | システムモード |
 | status_message | varchar(500) | NULL | 現在の状態メッセージ |
-| maintenance_id | int(11) | NULL | 関連メンテナンスID（maintenance.id） |
+| maintenance_id | bigint(20) | NULL | 関連メンテナンスID（maintenances.maintenance_id） |
 | changed_by | varchar(8) | FOREIGN KEY | 状態変更者ユーザーID |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
@@ -466,7 +466,7 @@ detail/control/relation_control.phpファイルに内容あり
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) FOREIGN KEY | 医療機関コード |
-| user_id | varchar(8) | PRIMARY KEY(複合主キー) FOREIGN KEY | ユーザーID（所属病院情報取得用） |
+| user_facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 登録者所属施設ID |
 | meeting_year | year(4) | PRIMARY KEY(複合主キー) | 参加年度 |
 | is_deleted | boolean | DEFAULT false | 削除フラグ |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
