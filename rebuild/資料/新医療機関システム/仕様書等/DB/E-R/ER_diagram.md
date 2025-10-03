@@ -1,8 +1,4 @@
-# 新医療機関システム E-R図
-
-## セクション別詳細図
-
-### 1. 医療機関基本情報系
+##### 1. 医療機関基本情報系
 
 ```mermaid
 erDiagram
@@ -61,16 +57,39 @@ erDiagram
         int display_order "表示順序"
     }
     
+    hospital_code_history {
+        bigint history_id PK "履歴ID"
+        varchar hospital_id FK "現在の医療機関コード"
+        varchar former_hospital_id "以前の医療機関コード"
+        date change_date "コード更新日"
+        datetime created_at "登録日時"
+    }
+    
+    hospitals_ward_types {
+        varchar hospital_id PK "医療機関コード"
+        varchar ward_id PK "病棟種類ID"
+    }
+    
+    ward_types {
+        varchar ward_id PK "病棟種類ID"
+        varchar ward_name "病棟名"
+        boolean is_active "有効フラグ"
+        int display_order "表示順序"
+    }
+    
     %% リレーションシップ
     hospital_types ||--o{ hospitals : "categorizes"
     hospitals ||--o{ addresses : "has"
     hospitals ||--o{ contact_details : "has"
+    hospitals ||--o{ hospital_code_history : "has_history"
+    hospitals ||--o{ hospitals_ward_types : "has_ward_types"
+    ward_types ||--o{ hospitals_ward_types : "defines"
     areas ||--o{ addresses : "locates"
 ```
 
 ---
 
-### 2. 人員・組織情報系
+##### 2. 人員・組織情報系
 
 ```mermaid
 erDiagram
@@ -104,7 +123,7 @@ erDiagram
 
 ---
 
-### 3. 診療科・診療内容系
+##### 3. 診療科・診療内容系
 
 ```mermaid
 erDiagram
@@ -150,7 +169,7 @@ erDiagram
 
 ---
 
-### 4. 連携・ネットワーク系
+##### 4. 連携・ネットワーク系
 
 ```mermaid
 erDiagram
@@ -185,7 +204,7 @@ erDiagram
 
 ---
 
-### 5. 紹介・診療支援系
+##### 5. 紹介・診療支援系
 
 ```mermaid
 erDiagram
@@ -233,7 +252,7 @@ erDiagram
 
 ---
 
-### 6. システム管理・ユーザー系
+##### 6. システム管理・ユーザー系
 
 ```mermaid
 erDiagram
@@ -271,9 +290,9 @@ erDiagram
     kawasaki_university_departments ||--o{ users : "belongs_to"
 ```
 
----
+<div style="page-break-inside: avoid;">
 
-### 7. ログ・監査系
+##### 7. ログ・監査系
 
 ```mermaid
 erDiagram
@@ -288,35 +307,27 @@ erDiagram
         varchar user_id FK "ユーザーID"
         varchar session_id "セッションID"
         varchar table_name "対象テーブル名"
-        varchar record_id "対象レコードID"
         enum action_type "操作種別"
         json old_values "変更前データ"
         json new_values "変更後データ"
         enum access_type "アクセス種別"
         varchar page_url "アクセスページURL"
-        varchar page_name "ページ名"
-        enum http_method "HTTPメソッド"
-        json request_params "リクエストパラメータ"
-        int response_status "レスポンスステータス"
-        int response_time_ms "レスポンス時間"
-        varchar referer "リファラー"
         enum event_type "セキュリティイベント種別"
         enum severity "重要度"
-        varchar target_resource "対象リソース"
-        varchar failure_reason "失敗理由"
-        text description "イベント詳細"
         varchar ip_address "IPアドレス"
-        json additional_data "追加データ"
         datetime created_at "ログ記録日時"
+        text other_fields "その他のフィールド"
     }
     
     %% リレーションシップ
     users ||--o{ unified_logs : "performs"
 ```
 
+</div>
+
 ---
 
-### 8. 問い合わせ・サポート系
+##### 8. 問い合わせ・サポート系
 
 ```mermaid
 erDiagram
@@ -345,7 +356,7 @@ erDiagram
 
 ---
 
-### 9. システム運営管理系
+##### 9. システム運営管理系
 
 ```mermaid
 erDiagram
@@ -386,15 +397,44 @@ erDiagram
         datetime created_at "作成日時"
     }
     
+    maintenance_start {
+        bigint id PK "実行通知ID"
+        bigint maintenance_id FK "メンテナンスID"
+        varchar title "通知タイトル"
+        text description "通知詳細"
+        text implementation_details "実施内容"
+        boolean view "表示フラグ"
+        varchar created_by FK "作成者ユーザーID"
+        datetime created_at "作成日時"
+        datetime updated_at "更新日時"
+    }
+    
+    messages {
+        bigint message_id PK "メッセージID"
+        enum status "対応状況"
+        text comment "内容"
+        boolean view "表示フラグ"
+        int version_id FK "実装バージョンID"
+        varchar assigned_to FK "担当者ユーザーID"
+        date res_date "対応日"
+        datetime created_at "作成日時"
+        datetime updated_at "更新日時"
+    }
+    
+
     %% リレーションシップ
     users ||--o{ maintenances : "creates"
     users ||--o{ system_status : "changes"
+    users ||--o{ maintenance_start : "creates"
+    users ||--o{ messages : "assigns"
+    system_versions ||--o{ messages : "implements"
     maintenances ||--o{ system_status : "relates"
+    maintenances ||--o{ maintenance_start : "generates"
 ```
 
 ---
 
-### 10. その他管理系
+##### 10. その他管理系
 
 ```mermaid
 erDiagram
