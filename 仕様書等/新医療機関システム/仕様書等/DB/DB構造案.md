@@ -220,7 +220,7 @@ detail/control/relation_control.phpファイルに内容あり
 | old_values | json | NULL | 変更前データ（監査ログ用） |
 | new_values | json | NULL | 変更後データ（監査ログ用） |
 | **アクセスログ用フィールド** |  |  |  |
-| access_type | enum('login','logout','page_access','api_access','download','upload','error') | NULL | アクセス種別 |
+| access_type | enum('login','logout','page_access',<br>'api_access','download','upload','error') | NULL | アクセス種別 |
 | page_url | varchar(500) | NULL | アクセスページURL |
 | page_name | varchar(100) | NULL | ページ名 |
 | http_method | enum('GET','POST','PUT','DELETE','PATCH') | NULL | HTTPメソッド |
@@ -229,7 +229,7 @@ detail/control/relation_control.phpファイルに内容あり
 | response_time_ms | int(11) | NULL | レスポンス時間（ミリ秒） |
 | referer | varchar(500) | NULL | リファラー |
 | **セキュリティログ用フィールド** |  |  |  |
-| event_type | enum('login_success','login_failure','password_change','account_lock','permission_denied','suspicious_access','data_export','admin_access') | NULL | セキュリティイベント種別 |
+| event_type | enum('login_success','login_failure',<br>'password_change','account_lock','permission_denied',<br>'suspicious_access','data_export','admin_access') | NULL | セキュリティイベント種別 |
 | severity | enum('low','medium','high','critical') | DEFAULT 'medium' | 重要度 |
 | target_resource | varchar(200) | NULL | 対象リソース |
 | failure_reason | varchar(200) | NULL | 失敗理由 |
