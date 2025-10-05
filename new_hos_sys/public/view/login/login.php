@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>医療機関情報システム - ログイン</title>
-  <link rel="stylesheet" href="../../CSS/AppCore.css">
-  <link rel="stylesheet" href="../../CSS/login.css">
+  <link rel="stylesheet" href="../../../CSS/AppCore.css">
+  <link rel="stylesheet" href="../../../CSS/login.css">
   <script src="../../js/login/login_auth.js"></script>
 </head>
 <body>

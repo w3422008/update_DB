@@ -12,4 +12,4 @@ if (empty($_SESSION['user_id'])) {
 
 // ユーザー情報取得
 $user_data = $app->loadUserInfo($_SESSION['user_id']) ?? $_SESSION['user_id'];
-require_once __DIR__ . '/../view/menu_view.php';
+require_once __DIR__ . '/../view/menu.php';

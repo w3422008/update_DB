@@ -32,7 +32,7 @@ class AppCore {
     private function initDb() {
         $host = getenv('DB_HOST') ?: 'localhost';
         $port = getenv('DB_PORT') ?: '3306';
-        $db   = getenv('DB_DATABASE') ?: 'new_hossysdb';
+        $db   = getenv('DB_DATABASE') ?: 'newhptldb';
         $user = getenv('DB_USERNAME') ?: 'root';
         $pass = getenv('DB_PASSWORD') ?: '';
 

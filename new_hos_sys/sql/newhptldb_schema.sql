@@ -1,3 +1,4 @@
+DROP DATABASE IF EXISTS newhptldb;
 CREATE DATABASE IF NOT EXISTS newhptldb
   DEFAULT CHARACTER SET utf8mb4
   COLLATE utf8mb4_general_ci;
@@ -224,7 +225,7 @@ CREATE TABLE users (
     password_hash varchar(255) NOT NULL COMMENT 'パスワードハッシュ',
     facility_id varchar(20) NOT NULL COMMENT '所属施設',
     department_id varchar(20) NOT NULL COMMENT '所属部署',
-    role enum('admin','editor','viewer') DEFAULT 'viewer' COMMENT '権限レベル',
+    role enum('system_admin','admin','editor','viewer') DEFAULT 'viewer' COMMENT '権限レベル',
     is_active boolean DEFAULT true COMMENT 'アカウント有効フラグ',
     last_login_at datetime NULL COMMENT '最終ログイン日時',
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
@@ -518,6 +519,15 @@ CREATE INDEX idx_inquires_status ON inquires(status);
 CREATE INDEX idx_inquires_priority ON inquires(priority);
 CREATE INDEX idx_inquires_assigned_to ON inquires(assigned_to);
 CREATE INDEX idx_inquires_created_at ON inquires(created_at);
+
+-- usersテーブル
+CREATE INDEX idx_users_user_name ON users(user_name);
+CREATE INDEX idx_users_active ON users(is_active);
+CREATE INDEX idx_users_facility_department ON users(facility_id, department_id);
+CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX idx_users_last_login ON users(last_login_at);
+CREATE INDEX idx_users_created_at ON users(created_at);
+CREATE INDEX idx_users_active_role ON users(is_active, role);
 
 -- hospital_code_historyテーブル
 CREATE INDEX idx_hospital_code_history_hospital_id ON hospital_code_history(hospital_id);
@@ -945,6 +955,223 @@ FOR EACH ROW BEGIN
             JSON_OBJECT('hospital_id', OLD.hospital_id, 'user_facility_id', OLD.user_facility_id, 
                        'meeting_year', OLD.meeting_year, 'is_deleted', OLD.is_deleted,
                        'created_at', OLD.created_at, 'updated_at', OLD.updated_at),
+            NOW());
+END$$
+
+-- =================================================================
+-- 不足していたテーブル用トリガー追加
+-- =================================================================
+
+-- addresses テーブル用トリガー
+CREATE TRIGGER addresses_insert_audit AFTER INSERT ON addresses
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, created_at)
+    VALUES ('audit', 'addresses', NEW.address_id, 'INSERT',
+            JSON_OBJECT('address_id', NEW.address_id, 'hospital_id', NEW.hospital_id, 
+                       'area_id', NEW.area_id, 'postal_code', NEW.postal_code,
+                       'street_number', NEW.street_number, 'full_address', NEW.full_address),
+            NOW());
+END$$
+
+CREATE TRIGGER addresses_update_audit AFTER UPDATE ON addresses
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, created_at)
+    VALUES ('audit', 'addresses', NEW.address_id, 'UPDATE',
+            JSON_OBJECT('address_id', OLD.address_id, 'hospital_id', OLD.hospital_id, 
+                       'area_id', OLD.area_id, 'postal_code', OLD.postal_code,
+                       'street_number', OLD.street_number, 'full_address', OLD.full_address),
+            JSON_OBJECT('address_id', NEW.address_id, 'hospital_id', NEW.hospital_id, 
+                       'area_id', NEW.area_id, 'postal_code', NEW.postal_code,
+                       'street_number', NEW.street_number, 'full_address', NEW.full_address),
+            NOW());
+END$$
+
+CREATE TRIGGER addresses_delete_audit AFTER DELETE ON addresses
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
+    VALUES ('audit', 'addresses', OLD.address_id, 'DELETE',
+            JSON_OBJECT('address_id', OLD.address_id, 'hospital_id', OLD.hospital_id, 
+                       'area_id', OLD.area_id, 'postal_code', OLD.postal_code,
+                       'street_number', OLD.street_number, 'full_address', OLD.full_address),
+            NOW());
+END$$
+
+-- consultation_hours テーブル用トリガー
+CREATE TRIGGER consultation_hours_insert_audit AFTER INSERT ON consultation_hours
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, created_at)
+    VALUES ('audit', 'consultation_hours', CONCAT(NEW.hospital_id, '_', NEW.day_of_week, '_', NEW.period), 'INSERT',
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'day_of_week', NEW.day_of_week, 
+                       'period', NEW.period, 'is_available', NEW.is_available,
+                       'start_time', NEW.start_time, 'end_time', NEW.end_time, 'notes', NEW.notes),
+            NOW());
+END$$
+
+CREATE TRIGGER consultation_hours_update_audit AFTER UPDATE ON consultation_hours
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, created_at)
+    VALUES ('audit', 'consultation_hours', CONCAT(NEW.hospital_id, '_', NEW.day_of_week, '_', NEW.period), 'UPDATE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'day_of_week', OLD.day_of_week, 
+                       'period', OLD.period, 'is_available', OLD.is_available,
+                       'start_time', OLD.start_time, 'end_time', OLD.end_time, 'notes', OLD.notes),
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'day_of_week', NEW.day_of_week, 
+                       'period', NEW.period, 'is_available', NEW.is_available,
+                       'start_time', NEW.start_time, 'end_time', NEW.end_time, 'notes', NEW.notes),
+            NOW());
+END$$
+
+CREATE TRIGGER consultation_hours_delete_audit AFTER DELETE ON consultation_hours
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
+    VALUES ('audit', 'consultation_hours', CONCAT(OLD.hospital_id, '_', OLD.day_of_week, '_', OLD.period), 'DELETE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'day_of_week', OLD.day_of_week, 
+                       'period', OLD.period, 'is_available', OLD.is_available,
+                       'start_time', OLD.start_time, 'end_time', OLD.end_time, 'notes', OLD.notes),
+            NOW());
+END$$
+
+-- hospital_departments テーブル用トリガー
+CREATE TRIGGER hospital_departments_insert_audit AFTER INSERT ON hospital_departments
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, created_at)
+    VALUES ('audit', 'hospital_departments', CONCAT(NEW.hospital_id, '_', NEW.department_id), 'INSERT',
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'department_id', NEW.department_id),
+            NOW());
+END$$
+
+CREATE TRIGGER hospital_departments_delete_audit AFTER DELETE ON hospital_departments
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
+    VALUES ('audit', 'hospital_departments', CONCAT(OLD.hospital_id, '_', OLD.department_id), 'DELETE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'department_id', OLD.department_id),
+            NOW());
+END$$
+
+-- hospital_services テーブル用トリガー
+CREATE TRIGGER hospital_services_insert_audit AFTER INSERT ON hospital_services
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, created_at)
+    VALUES ('audit', 'hospital_services', CONCAT(NEW.hospital_id, '_', NEW.service_id), 'INSERT',
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'service_id', NEW.service_id, 'notes', NEW.notes),
+            NOW());
+END$$
+
+CREATE TRIGGER hospital_services_update_audit AFTER UPDATE ON hospital_services
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, created_at)
+    VALUES ('audit', 'hospital_services', CONCAT(NEW.hospital_id, '_', NEW.service_id), 'UPDATE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'service_id', OLD.service_id, 'notes', OLD.notes),
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'service_id', NEW.service_id, 'notes', NEW.notes),
+            NOW());
+END$$
+
+CREATE TRIGGER hospital_services_delete_audit AFTER DELETE ON hospital_services
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
+    VALUES ('audit', 'hospital_services', CONCAT(OLD.hospital_id, '_', OLD.service_id), 'DELETE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'service_id', OLD.service_id, 'notes', OLD.notes),
+            NOW());
+END$$
+
+-- hospitals_ward_types テーブル用トリガー
+CREATE TRIGGER hospitals_ward_types_insert_audit AFTER INSERT ON hospitals_ward_types
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, created_at)
+    VALUES ('audit', 'hospitals_ward_types', CONCAT(NEW.hospital_id, '_', NEW.ward_id), 'INSERT',
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'ward_id', NEW.ward_id),
+            NOW());
+END$$
+
+CREATE TRIGGER hospitals_ward_types_delete_audit AFTER DELETE ON hospitals_ward_types
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
+    VALUES ('audit', 'hospitals_ward_types', CONCAT(OLD.hospital_id, '_', OLD.ward_id), 'DELETE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'ward_id', OLD.ward_id),
+            NOW());
+END$$
+
+-- clinical_pathway_hospitals テーブル用トリガー
+CREATE TRIGGER clinical_pathway_hospitals_insert_audit AFTER INSERT ON clinical_pathway_hospitals
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, created_at)
+    VALUES ('audit', 'clinical_pathway_hospitals', CONCAT(NEW.hospital_id, '_', NEW.clinical_pathway_id, '_', NEW.user_facility_id), 'INSERT',
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'clinical_pathway_id', NEW.clinical_pathway_id, 'user_facility_id', NEW.user_facility_id),
+            NOW());
+END$$
+
+CREATE TRIGGER clinical_pathway_hospitals_delete_audit AFTER DELETE ON clinical_pathway_hospitals
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
+    VALUES ('audit', 'clinical_pathway_hospitals', CONCAT(OLD.hospital_id, '_', OLD.clinical_pathway_id, '_', OLD.user_facility_id), 'DELETE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'clinical_pathway_id', OLD.clinical_pathway_id, 'user_facility_id', OLD.user_facility_id),
+            NOW());
+END$$
+
+-- training テーブル用トリガー
+CREATE TRIGGER training_insert_audit AFTER INSERT ON training
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, created_at)
+    VALUES ('audit', 'training', CONCAT(NEW.hospital_id, '_', NEW.year, '_', NEW.user_facility_id, '_', NEW.department, '_', NEW.start_date), 'INSERT',
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'year', NEW.year, 'user_facility_id', NEW.user_facility_id,
+                       'department', NEW.department, 'staff_name', NEW.staff_name, 'position_id', NEW.position_id,
+                       'start_date', NEW.start_date, 'end_date', NEW.end_date, 'diagnostic_aid', NEW.diagnostic_aid),
+            NOW());
+END$$
+
+CREATE TRIGGER training_update_audit AFTER UPDATE ON training
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, created_at)
+    VALUES ('audit', 'training', CONCAT(NEW.hospital_id, '_', NEW.year, '_', NEW.user_facility_id, '_', NEW.department, '_', NEW.start_date), 'UPDATE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'year', OLD.year, 'user_facility_id', OLD.user_facility_id,
+                       'department', OLD.department, 'staff_name', OLD.staff_name, 'position_id', OLD.position_id,
+                       'start_date', OLD.start_date, 'end_date', OLD.end_date, 'diagnostic_aid', OLD.diagnostic_aid),
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'year', NEW.year, 'user_facility_id', NEW.user_facility_id,
+                       'department', NEW.department, 'staff_name', NEW.staff_name, 'position_id', NEW.position_id,
+                       'start_date', NEW.start_date, 'end_date', NEW.end_date, 'diagnostic_aid', NEW.diagnostic_aid),
+            NOW());
+END$$
+
+CREATE TRIGGER training_delete_audit AFTER DELETE ON training
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
+    VALUES ('audit', 'training', CONCAT(OLD.hospital_id, '_', OLD.year, '_', OLD.user_facility_id, '_', OLD.department, '_', OLD.start_date), 'DELETE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'year', OLD.year, 'user_facility_id', OLD.user_facility_id,
+                       'department', OLD.department, 'staff_name', OLD.staff_name, 'position_id', OLD.position_id,
+                       'start_date', OLD.start_date, 'end_date', OLD.end_date, 'diagnostic_aid', OLD.diagnostic_aid),
+            NOW());
+END$$
+
+-- contacts テーブル用トリガー
+CREATE TRIGGER contacts_insert_audit AFTER INSERT ON contacts
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, new_values, created_at)
+    VALUES ('audit', 'contacts', CONCAT(NEW.hospital_id, '_', NEW.year, '_', NEW.user_facility_id, '_', NEW.date, '_', NEW.method), 'INSERT',
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'year', NEW.year, 'user_facility_id', NEW.user_facility_id,
+                       'date', NEW.date, 'method', NEW.method, 'external_contact_name', NEW.external_contact_name,
+                       'internal_contact_name', NEW.internal_contact_name, 'detail', NEW.detail),
+            NOW());
+END$$
+
+CREATE TRIGGER contacts_update_audit AFTER UPDATE ON contacts
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, new_values, created_at)
+    VALUES ('audit', 'contacts', CONCAT(NEW.hospital_id, '_', NEW.year, '_', NEW.user_facility_id, '_', NEW.date, '_', NEW.method), 'UPDATE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'year', OLD.year, 'user_facility_id', OLD.user_facility_id,
+                       'date', OLD.date, 'method', OLD.method, 'external_contact_name', OLD.external_contact_name,
+                       'internal_contact_name', OLD.internal_contact_name, 'detail', OLD.detail),
+            JSON_OBJECT('hospital_id', NEW.hospital_id, 'year', NEW.year, 'user_facility_id', NEW.user_facility_id,
+                       'date', NEW.date, 'method', NEW.method, 'external_contact_name', NEW.external_contact_name,
+                       'internal_contact_name', NEW.internal_contact_name, 'detail', NEW.detail),
+            NOW());
+END$$
+
+CREATE TRIGGER contacts_delete_audit AFTER DELETE ON contacts
+FOR EACH ROW BEGIN
+    INSERT INTO unified_logs (log_type, table_name, record_id, action_type, old_values, created_at)
+    VALUES ('audit', 'contacts', CONCAT(OLD.hospital_id, '_', OLD.year, '_', OLD.user_facility_id, '_', OLD.date, '_', OLD.method), 'DELETE',
+            JSON_OBJECT('hospital_id', OLD.hospital_id, 'year', OLD.year, 'user_facility_id', OLD.user_facility_id,
+                       'date', OLD.date, 'method', OLD.method, 'external_contact_name', OLD.external_contact_name,
+                       'internal_contact_name', OLD.internal_contact_name, 'detail', OLD.detail),
             NOW());
 END$$
 

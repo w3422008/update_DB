@@ -10,16 +10,23 @@
  * - loginSuccess: 認証成功時の処理
  * - json: JSON返却
  */
+
+require_once __DIR__ . '/LogAuditManager.php';
+
 class LoginManager {
-    /** @var PDO $pdo DB接続用PDOインスタンス */
+    /** @var PDO|null $pdo DB接続用PDOインスタンス */
     private $pdo;
+    
+    /** @var LogAuditManager|null $logManager ログ管理用インスタンス */
+    private $logManager;
 
     /**
      * コンストラクタ
-     * @param PDO $pdo DB接続
+     * @param PDO|null $pdo DB接続（ログアウト時はnull可）
      */
     public function __construct($pdo) {
         $this->pdo = $pdo;
+        $this->logManager = $pdo ? new LogAuditManager($pdo) : null;
     }
 
     // JSON返却
@@ -44,14 +51,27 @@ class LoginManager {
         $uidKey = "uid:$userId";
         // 試行回数制限判定
         if ($this->rlTooMany($ipKey, 20, '15 MINUTE') || $this->rlTooMany($uidKey, 10, '15 MINUTE')) {
+            // レートリミット制限ログを記録
+            if ($this->logManager) {
+                $this->logManager->recordRateLimitHit($userId, $ip);
+            }
             $this->json(['success' => false, 'message' => '試行回数が多すぎます。しばらくしてからお試しください。']);
             exit;
         }
         $isValid = $this->checkCredentials($userId, $password);
         // 認証失敗時の処理
-        if (!$this->checkCredentials($userId, $password)) {
-            $this->rlRecord($ipKey); $this->rlRecord($uidKey); usleep(250000);
-            $this->json(['success' => false, 'message' => 'IDまたはパスワードが正しくありません。', 'user_id' => $userId,'password' => $password,'isvaild'=>$isValid]);
+        if (!$isValid) {
+            // レートリミット記録
+            $this->rlRecord($ipKey); 
+            $this->rlRecord($uidKey); 
+            
+            // 詳細な失敗ログを記録
+            if ($this->logManager) {
+                $this->logManager->recordLoginFailure($userId, $ip, 'Invalid credentials');
+            }
+            
+            usleep(250000);
+            $this->json(['success' => false, 'message' => 'IDまたはパスワードが正しくありません。']);
             exit;
         }
         // 認証成功時の処理
@@ -69,22 +89,29 @@ class LoginManager {
      * @return bool 認証成功ならtrue
      */
     public function checkCredentials(string $userId, string $password): bool {
-        $st = $this->pdo->prepare('SELECT pwd_hash,is_active FROM users WHERE user_id=?');
+        $st = $this->pdo->prepare('SELECT password_hash,is_active FROM users WHERE user_id=?');
         $st->execute([$userId]);
         $row = $st->fetch();
         // ユーザーが存在しない or 無効ならfalse
         if(!$row || !(int)$row['is_active']) return false;
         // パスワード照合
-        return password_verify($password, $row['pwd_hash']);
+        return password_verify($password, $row['password_hash']);
     }
 
     /**
-     * ログイン成功時の処理（最終ログイン日時の更新）
+     * ログイン成功時の処理（最終ログイン日時の更新・ログ記録）
      * @param string $userId
      */
     public function afterLogin(string $userId): void {
+        // 最終ログイン日時の更新
         $st = $this->pdo->prepare('UPDATE users SET last_login_at=NOW() WHERE user_id=?');
         $st->execute([$userId]);
+        
+        // ログイン成功ログをunified_logsに記録
+        if ($this->logManager) {
+            $sessionId = session_id();
+            $this->logManager->recordLoginSuccess($userId, $sessionId);
+        }
     }
 
     /**
@@ -92,8 +119,15 @@ class LoginManager {
      * @param string $key
      */
     public function rlRecord(string $key): void {
-        $st = $this->pdo->prepare('INSERT INTO login_attempts (key_name) VALUES (?)');
-        $st->execute([$key]);
+        if ($this->logManager) {
+            // keyからuser_idを抽出（uid:で始まる場合）
+            $userId = null;
+            if (strpos($key, 'uid:') === 0) {
+                $userId = substr($key, 4);
+            }
+            
+            $this->logManager->recordLoginAttempt($key, $userId);
+        }
     }
 
     /**
@@ -104,9 +138,42 @@ class LoginManager {
      * @return bool
      */
     public function rlTooMany(string $key, int $limit, string $intervalSql): bool {
-        $st = $this->pdo->prepare("SELECT COUNT(*) FROM login_attempts WHERE key_name=? AND attempted > (NOW()-INTERVAL $intervalSql)");
-        $st->execute([$key]);
-        return ((int)$st->fetchColumn()) >= $limit;
+        if (!$this->logManager) {
+            return false;
+        }
+        
+        return $this->logManager->isRateLimitExceeded($key, $limit, $intervalSql);
+    }
+
+    // ログアウト処理
+    public function Logout() {
+        // セッションが開始されていない場合は開始
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // ログアウトログ記録（PDOが存在し、ユーザーIDがある場合のみ）
+        if ($this->logManager && isset($_SESSION['user_id'])) {
+            $userId = $_SESSION['user_id'];
+            $sessionId = session_id();
+            
+            try {
+                $this->logManager->recordLogout($userId, $sessionId);
+            } catch (Exception $e) {
+                // ログ記録失敗してもログアウト処理は継続
+                error_log("ログアウトログ記録エラー: " . $e->getMessage());
+            }
+        }
+        
+        // セッション変数を全て空に
+        $_SESSION = [];
+        // セッションクッキー削除
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'] ?? '', $params['secure'], $params['httponly']);
+        }
+        // セッション破棄
+        session_destroy();
     }
 
 }

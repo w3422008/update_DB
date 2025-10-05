@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新医療機関システム | SPAデモ</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <noscript class="noscript">このページをご利用になるにはJavaScriptを有効にしてください。</noscript>
+    <div class="app-shell">
+        <header class="topbar">
+            <h1 class="brand">新医療機関システム</h1>
+            <div class="topbar__meta">
+                <span class="meta__facility">桜台総合病院</span>
+                <span class="meta__user">ログイン中: 看護主任 佐藤</span>
+            </div>
+        </header>
+        <nav class="view-switcher" aria-label="画面切り替えナビゲーション">
+            <ul>
+                <li><button class="nav-link" data-view="dashboard">ダッシュボード</button></li>
+                <li><button class="nav-link" data-view="patients">患者情報</button></li>
+                <li><button class="nav-link" data-view="appointments">予約管理</button></li>
+                <li><button class="nav-link" data-view="analytics">統計分析</button></li>
+                <li><button class="nav-link" data-view="settings">設定</button></li>
+            </ul>
+        </nav>
+        <main id="app" class="content" aria-live="polite">
+            <div class="loader" role="status" aria-label="読込中">コンテンツを読み込んでいます...</div>
+        </main>
+    </div>
+    <footer class="footer">
+        <small>&copy; 2024 新医療機関システム開発チーム</small>
+    </footer>
+    <script type="module" src="app.js"></script>
+</body>
+</html>

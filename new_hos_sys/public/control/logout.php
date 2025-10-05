@@ -10,17 +10,17 @@
  *
  */
 // システム初期化
-require_once __DIR__ . '/../../class/LogOutManager.php';
+require_once __DIR__ . '/../../class/LoginManager.php';
 require_once __DIR__ . '/../../class/RedirectManager.php';
 
 /**
  * セッション完全削除処理
  */
-$Logout = new LogOutManager();
+$Logout = new LoginManager(null);
 // RedirectManagerのインスタンスを作成
 $redirect = new RedirectManager();
 
-$Logout->destroySession();
+$Logout->Logout();
 
 // 出力バッファをクリア（万が一の出力漏れ防止）
 if (ob_get_level()) {
