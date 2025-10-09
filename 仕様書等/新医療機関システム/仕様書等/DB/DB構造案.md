@@ -10,12 +10,13 @@
 | hospital_id | varchar(10) | PRIMARY KEY | 医療機関コード |
 | hospital_type_id | varchar(11) | FOREIGN KEY | 病院区分ID |
 | hospital_name | varchar(100) | NOT NULL | 医療機関名 |
-| status | enum('active','closed') | DEFAULT 'active' | 運営状況 |
+| status | enum('active','closed','Locked') | DEFAULT 'active' | 運営状況 |
 | bed_count | int(11) | DEFAULT 0 | 許可病床数 |
 | consultation_hour | varchar(200) | NULL | 診療時間 |
-| has_pt | boolean | DEFAULT false | 理学療法士在籍フラグ |
-| has_ot | boolean | DEFAULT false | 作業療法士在籍フラグ |
-| has_st | boolean | DEFAULT false | 言語聴覚療法士在籍フラグ |
+| has_carna_connect | tinyint(1) | DEFAULT 0 | カルナコネクトフラグ |
+| has_pt | tinyint(1) | DEFAULT 0 | 理学療法士在籍フラグ |
+| has_ot | tinyint(1) | DEFAULT 0 | 作業療法士在籍フラグ |
+| has_st | tinyint(1) | DEFAULT 0 | 言語聴覚療法士在籍フラグ |
 | notes | text | NULL | 備考 |
 | closed_at | date | NULL | 閉院日 |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
@@ -27,9 +28,9 @@
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| type_id | varchar(11) | PRIMARY KEY NOT NULL | 病院区分ID |
+| hospital_type_id | varchar(11) | PRIMARY KEY NOT NULL | 病院区分ID |
 | type_name | varchar(50) | NOT NULL | 区分名 |
-| is_active | boolean | DEFAULT true | 有効フラグ |
+| is_active | tinyint(1) | DEFAULT 1 | 有効フラグ |
 | display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 #### `addresses` テーブル（住所情報）
@@ -57,7 +58,7 @@
 | email | varchar(254) | NULL | メールアドレス |
 | website | varchar(500) | NULL | ウェブサイト |
 | note | text | NULL | 備考 |
-| is_deleted | boolean | DEFAULT false | 削除フラグ |
+| is_deleted | tinyint(1) | DEFAULT 0 | 削除フラグ |
 
 #### `hospital_code_history`(医療機関コード履歴)
 現在の医療機関コードと、過去に使用されていたコードを紐づけ
@@ -67,7 +68,6 @@
 | hospital_id | varchar(10) | FOREIGN KEY NOT NULL | 現在の医療機関コード |
 | former_hospital_id | varchar(10) | NOT NULL | 以前の医療機関コード |
 | change_date | date | NULL | コードが更新された日時 |
-| created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 登録日時 |
 
 #### `hospitals_ward_types`(病棟種類テーブル)
 病棟種類を持つかどうかを管理
@@ -82,7 +82,7 @@
 |-------------|----------|------|------|
 | ward_id | varchar(10) | PRIMARY KEY NOT NULL | 病棟種類ID |
 | ward_name | varchar(20) | NOT NULL | 病棟名 |
-| is_active | boolean | DEFAULT true | 有効フラグ |
+| is_active | tinyint(1) | DEFAULT 1 | 有効フラグ |
 | display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 ### 2. 人員情報系
@@ -111,7 +111,7 @@
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
 | day_of_week | enum('monday','tuesday','wednesday','thursday','friday','saturday','sunday','holiday') | PRIMARY KEY(複合主キー) | 曜日 |
 | period | enum('AM','PM') | PRIMARY KEY(複合主キー) | 時間帯 |
-| is_available | boolean | DEFAULT true | 診療可否 |
+| is_available | tinyint(1) | DEFAULT 1 | 診療可否 |
 
 ### 4. 診療科系
 
@@ -123,7 +123,7 @@
 | department_id | varchar(10) | PRIMARY KEY NOT NULL | 診療科コード |
 | department_name | varchar(100) | NOT NULL | 診療科名 |
 | category | varchar(100) | NOT NULL | 診療科カテゴリ名 |
-| is_active | boolean | DEFAULT true | 有効フラグ |
+| is_active | tinyint(1) | DEFAULT 1 | 有効フラグ |
 | display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 #### `hospital_departments` テーブル（病院診療科関連）
@@ -145,7 +145,7 @@
 | service_division | varchar(100) | PRIMARY KEY(複合主キー) NOT NULL | 診療区分 |
 | service_category | varchar(100) | NULL | 診療部門 |
 | service_name | varchar(300) | NOT NULL | 診療内容名 |
-| is_active | boolean | DEFAULT true | 有効フラグ |
+| is_active | tinyint(1) | DEFAULT 1 | 有効フラグ |
 | display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 #### `hospital_services` テーブル（病院診療内容関連）
@@ -157,23 +157,23 @@
 | service_id | varchar(10) | PRIMARY KEY(複合主キー) FOREIGN KEY | 診療内容コード |
 | service_division | varchar(100) | PRIMARY KEY(複合主キー) FOREIGN KEY | 診療区分 |
 
-#### `clinical_pathway_hospitals`テーブル（連携パスと医療機関を接続）
+#### `clinical_path_hospitals`テーブル（連携パスと医療機関を接続）
 地域連携クリニカルパスの存在有無を管理
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
-| clinical_pathway_id | varchar(10) | PRIMARY KEY(複合主キー) | 連携パスID |
-| user_facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 登録者所属施設ID |
+| clinical_path_id | varchar(10) | PRIMARY KEY(複合主キー) | 連携パスID |
+| facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 施設ID |
 
-#### `clinical_pathways`テーブル（連携パスマスタ）
+#### `clinical_paths`テーブル（連携パスマスタ）
 地域連携クリニカルパス名を管理
 detail/control/relation_control.phpファイルに内容あり
 （`入退院支援連携先病院`,`脳卒中パス`,`大腿骨パス`,`心筋梗塞・心不全パス`,`胃がんパス`,`大腸がんパス`,`乳がんパス`,`肺がんパス`,`肝がんパス`が存在）
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| clinical_pathway_id | varchar(10) | PRIMARY KEY | 連携パスID |
+| clinical_path_id | varchar(10) | PRIMARY KEY | 連携パスID |
 | path_name | varchar(30) | NOT NULL | 連携パス名 |
-| is_active | boolean | DEFAULT true | 有効フラグ |
+| is_active | tinyint(1) | DEFAULT 1 | 有効フラグ |
 | display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 ### 6. 地域・エリア系
@@ -189,17 +189,10 @@ detail/control/relation_control.phpファイルに内容あり
 | city | varchar(30) | NULL | 市 |
 | ward | varchar(20) | NULL | 区 |
 | town | varchar(30) | NULL | 町 |
-| is_active | boolean | DEFAULT true | 有効フラグ |
+| is_active | tinyint(1) | DEFAULT 1 | 有効フラグ |
 | display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
-### 7. 外部連携系
-
-#### `carna_connects` テーブル（カルナコネクト情報）`既存テーブル`
-
-| フィールド名 | データ型 | 制約 | 説明 |
-|-------------|----------|------|------|
-| hospital_id | varchar(10) | PRIMARY KEY | 医療機関コード |
-| is_deleted | boolean | DEFAULT false | 削除フラグ |
+<!-- ### 7. 外部連携系 -->
 
 ### 8. 履歴・ログ系
 
@@ -249,10 +242,9 @@ detail/control/relation_control.phpファイルに内容あり
 | user_id | varchar(8) | PRIMARY KEY | ユーザーID |
 | user_name | varchar(50) | NOT NULL | ユーザー名 |
 | password_hash | varchar(255) | NOT NULL | パスワードハッシュ |
-| facility_id | varchar(20) | NOT NULL | 所属施設ID |
-| department_id | varchar(20) | NOT NULL | 所属部署ID |
+| department_id | varchar(20) | FOREIGN KEY NOT NULL | 部署ID |
 | role | enum('admin','editor','viewer') | DEFAULT 'viewer' | 権限レベル |
-| is_active | boolean | DEFAULT true | アカウント有効フラグ |
+| is_active | tinyint(1) | DEFAULT 1 | アカウント有効フラグ |
 | last_login_at | datetime | NULL | 最終ログイン日時 |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
@@ -263,11 +255,10 @@ detail/control/relation_control.phpファイルに内容あり
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| facility_id | varchar(20) | PRIMARY KEY | 所属施設ID |
+| facility_id | varchar(20) | PRIMARY KEY | 施設ID |
 | facility_name | varchar(50) | NOT NULL | 施設名 |
-| formal_name | varchar(60) | NOT NULL | 正式名称 |
-| abbreviation | varchar(50) | NULL | 略称 |
-| is_active | boolean | DEFAULT true | 有効フラグ |
+| abbreviation | varchar(50) | NULL | 略名 |
+| is_active | tinyint(1) | DEFAULT 1 | 有効フラグ |
 | display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 #### `kawasaki_university_departments` テーブル（マスタ）
@@ -276,24 +267,25 @@ detail/control/relation_control.phpファイルに内容あり
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | department_id | varchar(20) | PRIMARY KEY | 部署ID |
+| facility_id | varchar(20) | FOREIGN KEY NOT NULL | 施設ID |
 | department_name | varchar(50) | NOT NULL | 部署名 |
-| is_active | boolean | DEFAULT true | 有効フラグ |
+| is_active | tinyint(1) | DEFAULT 1 | 有効フラグ |
 | display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
 
 ### 10. その他統合テーブル
-#### `introductions` テーブル（紹介データ）
+#### `referrals` テーブル（紹介データ）
 医療機関間の紹介情報を管理
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
-| user_facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 登録者所属施設ID |
+| facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 施設ID |
 | year | year | PRIMARY KEY(複合主キー) | 年度 |
 | date | date | PRIMARY KEY(複合主キー) | 診療日 |
 | department_name | varchar(30) | PRIMARY KEY(複合主キー) | 診療科 |
-| intro_type | enum('intro','invers_intro') | PRIMARY KEY(複合主キー) DEFAULT 'intro' | 紹介・逆紹介判定 |
+| referral_type | enum('referral','invers_referral') | PRIMARY KEY(複合主キー) DEFAULT 'referral' | 紹介・逆紹介判定 |
 | department_id | varchar(10) | NULL | 診療科コード |
-| intro_count | int(11) | NOT NULL | 紹介・逆紹介件数 |
+| referral_count | int(11) | NOT NULL | 紹介・逆紹介件数 |
 
 #### `training` テーブル（兼業データ）
 複数の医療機関へ研修・勤務している人物を管理
@@ -302,10 +294,10 @@ detail/control/relation_control.phpファイルに内容あり
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
 | year | year | PRIMARY KEY(複合主キー) | 年度 |
-| user_facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 登録者所属施設ID |
+| facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 施設ID |
 | department | varchar(60) | PRIMARY KEY(複合主キー) | 診療科 |
 | staff_name | varchar(60) | NOT NULL | 氏名 |
-| position_id | varchar(20) | FOREIGN KEY | 職名 |
+| position_name | varchar(60) | FOREIGN KEY | 職名 |
 | start_date | date | PRIMARY KEY(複合主キー) | 診療支援開始日 |
 | end_date | date | NULL | 診療支援終了日 |
 | date | varchar(300) | NULL | 日付 |
@@ -316,10 +308,12 @@ detail/control/relation_control.phpファイルに内容あり
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
-| position_id | varchar(20) | PRIMARY KEY | 職名id |
-| position_name | varchar(60) | NOT NULL | 職名 |
-| is_active | boolean | DEFAULT true | 有効フラグ |
+| position_name | varchar(60) | PRIMARY KEY | 職名 |
+| is_active | tinyint(1) | DEFAULT 1 | 有効フラグ |
 | display_order | int(11) | NOT NULL DEFAULT 0 | 表示順序 |
+
+※ 職名IDは削除しました。
+<!-- | position_id | varchar(20) | PRIMARY KEY | 職名id | -->
 
 #### `contacts` テーブル（コンタクト履歴）
 医療機関同士のコンタクト履歴を保管
@@ -328,7 +322,7 @@ detail/control/relation_control.phpファイルに内容あり
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) | 医療機関コード |
 | year | year(4) | PRIMARY KEY(複合主キー) | 年度 |
-| user_facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 登録者所属施設ID |
+| facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 施設ID |
 | date | date | PRIMARY KEY(複合主キー) | 日付 |
 | method | varchar(50) | PRIMARY KEY(複合主キー) | 方法（来院、訪問、オンライン等） |
 | external_contact_name | varchar(10) | NOT NULL | 連携機関対応者氏名 |
@@ -371,7 +365,7 @@ detail/control/relation_control.phpファイルに内容あり
 | date | date | NOT NULL | 予定作業日 |
 | start_time | time | NULL | 予定開始時刻 |
 | end_time | time | NULL | 予定終了時刻 |
-| view | boolean | NOT NULL DEFAULT true | 表示フラグ |
+| view | tinyint(1) | DEFAULT 1 | 表示フラグ |
 | created_by | varchar(8) | FOREIGN KEY | 作成者ユーザーID |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
@@ -386,7 +380,7 @@ detail/control/relation_control.phpファイルに内容あり
 | title | varchar(200) | NOT NULL | 通知タイトル |
 | description | text | NULL | 通知詳細 |
 | implementation_details | text | NULL | 実施内容 |
-| view | boolean | NOT NULL DEFAULT true | 表示フラグ |
+| view | tinyint(1) | DEFAULT 1 | 表示フラグ |
 | created_by | varchar(8) | FOREIGN KEY | 作成者ユーザーID |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
@@ -399,7 +393,7 @@ detail/control/relation_control.phpファイルに内容あり
 | message_id | bigint(20) | PRIMARY KEY AUTO_INCREMENT | メッセージID |
 | status | enum('open','in_progress','completed','rejected') | DEFAULT 'open' | 対応状況 |
 | comment | text | NOT NULL | 内容 |
-| view | boolean | NOT NULL DEFAULT true | 表示フラグ |
+| view | tinyint(1) | DEFAULT 1 | 表示フラグ |
 | version_id | int(11) | FOREIGN KEY NULL | 実装バージョンID |
 | assigned_to | varchar(8) | FOREIGN KEY | 担当者ユーザーID |
 | res_date | date | NULL | 対応日 |
@@ -435,7 +429,7 @@ detail/control/relation_control.phpファイルに内容あり
 | version_id | int(11) | PRIMARY KEY AUTO_INCREMENT | バージョン管理ID |
 | version_number | varchar(20) | NOT NULL UNIQUE | バージョン番号（例：4.5.2） |
 | release_date | date | NOT NULL | リリース日 |
-| is_current | boolean | NOT NULL DEFAULT false | 現在稼働バージョンフラグ |
+| is_current | tinyint(1) | DEFAULT 0 | 現在稼働バージョンフラグ |
 | release_notes | text | NULL | リリースノート・変更内容 |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
 
@@ -454,7 +448,7 @@ detail/control/relation_control.phpファイルに内容あり
 | entrance_year | year(4) | NULL | 入学年 |
 | graduation_year | year(4) | NULL | 卒業年 |
 | notes | text | NULL | 備考 |
-| is_deleted | boolean | DEFAULT false | 削除フラグ |
+| is_deleted | tinyint(1) | DEFAULT 0 | 削除フラグ |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
 
@@ -466,8 +460,8 @@ detail/control/relation_control.phpファイルに内容あり
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) FOREIGN KEY | 医療機関コード |
-| user_facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 登録者所属施設ID |
+| facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 施設ID |
 | meeting_year | year(4) | PRIMARY KEY(複合主キー) | 参加年度 |
-| is_deleted | boolean | DEFAULT false | 削除フラグ |
+| is_deleted | tinyint(1) | DEFAULT 0 | 削除フラグ |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
