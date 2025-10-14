@@ -12,7 +12,6 @@
 | hospital_name | varchar(100) | NOT NULL | 医療機関名 |
 | status | enum('active','closed','Locked') | DEFAULT 'active' | 運営状況 |
 | bed_count | int(11) | DEFAULT 0 | 許可病床数 |
-| consultation_hour | varchar(200) | NULL | 診療時間 |
 | has_carna_connect | tinyint(1) | DEFAULT 0 | カルナコネクトフラグ |
 | has_pt | tinyint(1) | DEFAULT 0 | 理学療法士在籍フラグ |
 | has_ot | tinyint(1) | DEFAULT 0 | 作業療法士在籍フラグ |
@@ -347,10 +346,10 @@ detail/control/relation_control.phpファイルに内容あり
 | status | enum('open','in_progress','resolved','closed') | DEFAULT 'open' | 対応状況 |
 | description | text | NOT NULL | 問い合わせ内容 |
 | assigned_to | varchar(8) | FOREIGN KEY | 担当者ユーザーID |
-| resolution | text | NULL | 解決方法・回答内容 |
+| resolution | text | NULL | 回答内容 |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 問い合わせ日時 |
-| updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 最終更新日時 |
-| resolved_at | datetime | NULL | 解決日時 |
+| updated_at | date | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 回答日時 |
+| resolved_at | date | NULL | 対応終了日 |
 
 ### 11. システム運営管理系
 
@@ -432,6 +431,7 @@ detail/control/relation_control.phpファイルに内容あり
 | is_current | tinyint(1) | DEFAULT 0 | 現在稼働バージョンフラグ |
 | release_notes | text | NULL | リリースノート・変更内容 |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | datetime | DEFAULT CURRENT_TIMESTAMP | 更新日時 |
 
 ### 13. 関係者・人物情報系
 
@@ -442,8 +442,8 @@ detail/control/relation_control.phpファイルに内容あり
 |-------------|----------|------|------|
 | relative_id | int(11) | PRIMARY KEY AUTO_INCREMENT | 親族ID |
 | hospital_id | varchar(10) | FOREIGN KEY NOT NULL | 医療機関コード |
-| relative_name | varchar(60) | NOT NULL | 人物名 |
-| connection | varchar(30) | NULL | 関係 |
+| relative_name | varchar(60) | NOT NULL | 親族名 |
+| connection | varchar(30) | NULL | 続柄 |
 | school_name | varchar(100) | NULL | 学校名 |
 | entrance_year | year(4) | NULL | 入学年 |
 | graduation_year | year(4) | NULL | 卒業年 |
@@ -462,6 +462,5 @@ detail/control/relation_control.phpファイルに内容あり
 | hospital_id | varchar(10) | PRIMARY KEY(複合主キー) FOREIGN KEY | 医療機関コード |
 | facility_id | varchar(20) | PRIMARY KEY(複合主キー) | 施設ID |
 | meeting_year | year(4) | PRIMARY KEY(複合主キー) | 参加年度 |
-| is_deleted | tinyint(1) | DEFAULT 0 | 削除フラグ |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | datetime | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新日時 |
