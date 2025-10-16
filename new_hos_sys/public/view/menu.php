@@ -12,6 +12,7 @@
 <head>
     <meta charset="utf-8">
     <title>メニュー - 医療機関情報システム</title>
+    <link rel="icon" type="image/png" href="../../favicon.ico">
     <!-- UIkit CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.16.14/dist/css/uikit.min.css" />
     <!-- UIkit JS -->
