@@ -9,7 +9,7 @@
 <!-- ナビゲーションバー -->
 <nav class="uk-navbar-container bg-navbar1" uk-navbar>
     <div class="uk-navbar-left">
-        <a class="uk-navbar-item uk-logo" href="../control/menu.php">医療機関情報システム</a>
+        <a class="uk-navbar-item uk-logo" href="menu.php">医療機関情報システム</a>
     </div>
     
     <div class="uk-navbar-right">
@@ -34,7 +34,7 @@
                 </li>
                 <li class="uk-nav-divider"></li>
                 <li><a href="#" class="menu-item"><span uk-icon="cog" class="menu-icon"></span>パスワード変更</a></li>
-                <li><a href="../control/logout.php" class="menu-item"><span uk-icon="sign-out" class="menu-icon"></span>ログアウト</a></li>
+                <li><a href="logout.php" class="menu-item"><span uk-icon="sign-out" class="menu-icon"></span>ログアウト</a></li>
             </ul>
         </div>
     </div>

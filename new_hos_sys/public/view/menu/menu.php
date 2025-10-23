@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="../../CSS/menu.css">
 </head>
 <body>
-    <?php include_once "header.php"; ?>
+    <?php include_once "../view/templates/header.php"; ?>
     
     <div class="uk-container uk-container-large uk-margin-top">
         <div class="menu-grid">

@@ -11,4 +11,4 @@ require_once __DIR__ . '/../class/AppCore.php';
 require_once __DIR__ . '/../class/LoginManager.php';
 $app = new AppCore();
 $loginManager = new LoginManager($app->pdo);
-$loginManager->handle();
+$loginManager->handle($app);

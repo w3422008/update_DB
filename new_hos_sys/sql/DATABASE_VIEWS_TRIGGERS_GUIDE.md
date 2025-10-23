@@ -10,11 +10,10 @@
 
 1. [概要](#概要)
 2. [統合ログシステム](#統合ログシステム)
-3. [監査トリガー](#監査トリガー)
-4. [ビュー一覧](#ビュー一覧)
-5. [関数・プロシージャ](#関数プロシージャ)
-6. [使用例](#使用例)
-7. [メンテナンス・運用](#メンテナンス運用)
+3. [ビュー一覧](#ビュー一覧)
+4. [関数・プロシージャ](#関数プロシージャ)
+5. [使用例](#使用例)
+6. [メンテナンス・運用](#メンテナンス運用)
 
 ---
 
@@ -23,10 +22,9 @@
 newhptldbデータベースは病院情報管理システムで、包括的な監査ログ機能、アクセス管理、システム運営支援機能を提供します。
 
 ### 主要機能
-- **統合ログシステム** - 全テーブルの変更を自動記録
-- **セキュリティ監査** - ログイン試行、権限変更等を追跡
-- **アクセスログ** - ページアクセス、API呼び出しを記録
-- **システム管理** - メンテナンス、バージョン管理を支援
+- **統合ログシステム** - 全テーブルの変更記録用テーブル構造を提供
+- **ビューシステム** - システム運営支援、ログ分析用ビューを提供
+- **関数・プロシージャ** - システム管理用の基本機能を提供
 
 ---
 
@@ -64,7 +62,7 @@ CREATE TABLE unified_logs (
     ip_address varchar(45),
     user_agent text,
     facility_id varchar(30),
-    department_id varchar(30),
+    department_id varchar(50),
     created_at datetime DEFAULT CURRENT_TIMESTAMP
 );
 ```
@@ -80,108 +78,93 @@ CREATE TABLE unified_logs (
 
 ---
 
-## 監査トリガー
-
-### 自動監査機能
-
-すべての主要テーブルに対して、INSERT、UPDATE、DELETE操作を自動的にログ記録するトリガーが設定されています。
-
-#### 対象テーブル一覧
-
-| テーブル名 | 監査対象操作 | 特記事項 |
-|-----------|-------------|---------|
-| `hospitals` | INSERT, UPDATE, DELETE | 医療機関情報の変更を追跡 |
-| `users` | INSERT, UPDATE, DELETE | パスワードハッシュは記録から除外 |
-| `contact_details` | INSERT, UPDATE, DELETE | 連絡先情報の変更を追跡 |
-| `hospital_staffs` | INSERT, UPDATE, DELETE | 重要人物情報の変更を追跡 |
-| `introductions` | INSERT, UPDATE, DELETE | 紹介・逆紹介データの変更を追跡 |
-| `maintenances` | INSERT, UPDATE, DELETE | メンテナンス計画の変更を追跡 |
-| `messages` | INSERT, UPDATE, DELETE | システム要望・更新情報の変更を追跡 |
-| `inquires` | INSERT, UPDATE, DELETE | 問い合わせ情報の変更を追跡 |
-
-#### トリガー命名規則
-
-```
-{テーブル名}_{操作}_{audit}
-例: hospitals_insert_audit, users_update_audit
-```
-
-#### セキュリティ考慮事項
-
-- **パスワードハッシュは記録されません** - `users`テーブルの`password_hash`フィールドは監査ログから除外
-- **変更前後の値をJSON形式で保存** - 詳細な変更履歴を確認可能
-- **自動的なユーザー特定** - 可能な場合はuser_idを自動設定
-
----
-
 ## ビュー一覧
-
-### 監査・ログ関連ビュー
-
-#### 1. audit_summary
-```sql
--- 監査ログの概要統計
-SELECT * FROM audit_summary;
-```
-各テーブルの操作回数と最終操作日時を表示
-
-#### 2. access_summary  
-```sql
--- アクセス統計（過去30日）
-SELECT * FROM access_summary;
-```
-日別・アクセスタイプ別の統計情報
-
-#### 3. security_alerts
-```sql
--- 高重要度セキュリティアラート
-SELECT * FROM security_alerts WHERE severity IN ('high', 'critical');
-```
-重要なセキュリティイベントを監視
-
-#### 4. user_activity
-```sql
--- ユーザーアクティビティ（過去30日）
-SELECT * FROM user_activity ORDER BY last_access DESC;
-```
-ユーザーの活動状況を追跡
 
 ### システム運営管理ビュー
 
-#### 5. current_system_status
+#### 1. current_system_status
 ```sql
 -- 現在のシステム状態
 SELECT * FROM current_system_status;
 ```
 システムモード（通常/メンテナンス/読み取り専用）を確認
 
-#### 6. current_version
+#### 2. current_version
 ```sql
 -- 現在稼働中のバージョン
 SELECT * FROM current_version;
 ```
 システムの現行バージョン情報
 
-#### 7. maintenance_schedule
+#### 3. maintenance_schedule
 ```sql
 -- メンテナンス予定一覧
 SELECT * FROM maintenance_schedule WHERE date >= CURDATE();
 ```
 今後のメンテナンス予定を表示
 
-#### 8. message_management
+#### 4. message_management
 ```sql
 -- メッセージ・要望管理
 SELECT * FROM message_management WHERE status = 'open';
 ```
 未対応の要望・メッセージを表示
 
-#### 9. inquire_management
+#### 5. inquire_management
 ```sql
 -- 問い合わせ管理
 SELECT * FROM inquire_management WHERE status IN ('open', 'in_progress');
 ```
 対応中・未対応の問い合わせを表示
+
+#### 6. audit_summary
+```sql
+-- 監査ログの概要統計
+SELECT * FROM audit_summary;
+```
+各テーブルの操作回数と最終操作日時を表示
+
+#### 7. access_summary  
+```sql
+-- アクセス統計（過去30日）
+SELECT * FROM access_summary;
+```
+日別・アクセスタイプ別の統計情報
+
+#### 8. security_alerts
+```sql
+-- 高重要度セキュリティアラート
+SELECT * FROM security_alerts WHERE severity IN ('high', 'critical');
+```
+重要なセキュリティイベントを監視
+
+#### 9. user_activity
+```sql
+-- ユーザーアクティビティ（過去30日）
+SELECT * FROM user_activity ORDER BY last_access DESC;
+```
+ユーザーの活動状況を追跡
+
+#### 10. version_statistics
+```sql
+-- バージョン管理統計
+SELECT * FROM version_statistics;
+```
+システムバージョンと関連メッセージの統計
+
+#### 11. inquire_statistics
+```sql
+-- 問い合わせ統計
+SELECT * FROM inquire_statistics;
+```
+問い合わせの統計情報（過去30日間）
+
+#### 12. system_usage_stats
+```sql
+-- システム利用統計
+SELECT * FROM system_usage_stats;
+```
+システム利用統計（過去30日間）
 
 ---
 
@@ -193,19 +176,7 @@ SELECT * FROM inquire_management WHERE status IN ('open', 'in_progress');
 SELECT get_current_version();
 ```
 
-### 2. switch_current_version(new_version_id)
-```sql
--- 安全なバージョン切り替え
-CALL switch_current_version(5);
-```
-
-### 3. escalate_urgent_inquiries()
-```sql
--- 緊急問い合わせの自動エスカレーション
-CALL escalate_urgent_inquiries();
-```
-
-### 4. update_inquire_status(inquire_id, new_status, resolution, assigned_to)
+### 2. update_inquire_status(inquire_id, new_status, resolution, assigned_to)
 ```sql
 -- 問い合わせステータス更新
 CALL update_inquire_status(123, 'resolved', '解決しました', 'admin001');
@@ -215,68 +186,49 @@ CALL update_inquire_status(123, 'resolved', '解決しました', 'admin001');
 
 ## 使用例
 
-### 監査ログの確認
+### ログテーブルの確認
 
 ```sql
--- 特定テーブルの変更履歴を確認
+-- 統合ログテーブルの内容確認
 SELECT 
     log_id,
-    action_type,
+    log_type,
     user_id,
-    old_values,
-    new_values,
+    description,
     created_at
 FROM unified_logs 
-WHERE log_type = 'audit' 
-  AND table_name = 'hospitals'
-  AND record_id = '1234567890'
-ORDER BY created_at DESC;
+ORDER BY created_at DESC
+LIMIT 20;
 ```
 
-### セキュリティ監視
+### システム運営管理
 
 ```sql
--- 失敗ログイン試行の監視
-SELECT 
-    ip_address,
-    COUNT(*) as failed_attempts,
-    MAX(created_at) as last_attempt
-FROM unified_logs 
-WHERE log_type = 'security' 
-  AND event_type = 'login_failure'
-  AND created_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR)
-GROUP BY ip_address
-HAVING failed_attempts > 5;
+-- 現在のシステムバージョン確認
+SELECT get_current_version();
+
+-- メンテナンス予定の確認
+SELECT * FROM maintenance_schedule WHERE date >= CURDATE();
+
+-- 未対応の問い合わせ確認
+SELECT * FROM inquire_management WHERE status = 'open';
 ```
 
-### アクセス統計の取得
+### ユーザー管理
 
 ```sql
--- 人気ページランキング
+-- アクティブユーザーリスト
 SELECT 
-    page_name,
-    COUNT(*) as access_count,
-    COUNT(DISTINCT user_id) as unique_users
-FROM unified_logs 
-WHERE log_type = 'access' 
-  AND access_type = 'page_access'
-  AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-GROUP BY page_name
-ORDER BY access_count DESC
-LIMIT 10;
+    u.user_id,
+    u.user_name,
+    u.role,
+    d.department_name,
+    f.facility_name
+FROM users u
+JOIN kawasaki_university_departments d ON u.department_id = d.department_id
+JOIN kawasaki_university_facilities f ON d.facility_id = f.facility_id
+WHERE u.is_active = 1;
 ```
-
-### メンテナンス管理
-
-```sql
--- 予定されているメンテナンスの確認
-SELECT 
-    title,
-    date,
-    start_time,
-    end_time,
-    comment
-FROM maintenance_schedule
 WHERE date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
 ORDER BY date, start_time;
 ```
@@ -354,19 +306,20 @@ WHERE log_type = 'audit'
 ## 注意事項
 
 ### セキュリティ
-- 監査ログは改ざん防止のため、一般ユーザーからは読み取り専用
-- パスワード等の機密情報はログに記録されない設計
-- 定期的なログの外部バックアップを推奨
+- データベースアクセスは適切な権限管理を実施
+- パスワードハッシュ等の機密情報は適切に保護
+- 定期的なデータベースバックアップを推奨
 
 ### パフォーマンス
-- ログテーブルは急速に成長するため、定期的な古いデータの削除が必要
-- 大量のトリガー処理があるため、バッチ処理時は一時的にトリガーを無効化することを検討
+- ログテーブルは時間とともに成長するため、適切な保存期間設定を検討
+- インデックスが適切に設定されているかを定期的に確認
 
 ### 運用
-- システムバージョンの変更時は必ず`switch_current_version`プロシージャを使用
-- メンテナンスモード切り替え時は事前にユーザーへの通知を実施
+- システムバージョン管理は`system_versions`テーブルで一元管理
+- メンテナンス計画は事前にユーザーへの通知を実施
+- 問い合わせ対応は`update_inquire_status`プロシージャで統一的に管理
 
 ---
 
-**最終更新:** 2025年10月5日  
-**文書バージョン:** 1.0
+**最終更新:** 2025年10月18日  
+**文書バージョン:** 1.2

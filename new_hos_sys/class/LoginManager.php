@@ -37,7 +37,7 @@ class LoginManager {
     /**
      * API本体（POST受付・認証・レートリミット・セッション管理・JSON返却）
      */
-    public function handle() {
+    public function handle($app) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
             $this->json(['success' => false, 'message' => 'POSTメソッドのみ許可されています。']);
@@ -76,7 +76,7 @@ class LoginManager {
         }
         // 認証成功時の処理
         session_regenerate_id(true);
-        $_SESSION['user_id'] = $userId;
+        $_SESSION['user_id'] = $app->escape($userId);
         $this->afterLogin($userId);
         $this->json(['success' => true]);
         exit;
