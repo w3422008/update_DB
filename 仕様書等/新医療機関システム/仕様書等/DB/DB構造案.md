@@ -197,39 +197,32 @@ detail/control/relation_control.phpファイルに内容あり
 
 #### `unified_logs` テーブル（統合ログ）
 システム内のすべてのログ情報を一元管理する統合ログテーブル
-4つのログ種別（監査・アクセス・セキュリティ・ログイン試行）をサポート
+ログ種別（監査・セキュリティ）ごとに区分けする
 
 | フィールド名 | データ型 | 制約 | 説明 |
 |-------------|----------|------|------|
 | log_id | bigint(20) | PRIMARY KEY AUTO_INCREMENT | ログID |
-| log_type | enum('audit','login_attempt','access','security') | NOT NULL | ログ種別 |
+| log_type | enum('audit','security') | NOT NULL | ログ種別 |
+| action_type | varchar(20) | NOT NULL | 操作種別 |
 | user_id | varchar(8) | FOREIGN KEY | ユーザーID |
-| session_id | varchar(64) | NULL | セッションID |
-| **監査ログ用フィールド** |  |  |  |
-| table_name | varchar(50) | NULL | 対象テーブル名（監査ログ用） |
-| record_id | varchar(50) | NULL | 対象レコードID（監査ログ用） |
-| action_type | enum('INSERT','UPDATE','DELETE') | NULL | 操作種別（監査ログ用） |
-| old_values | json | NULL | 変更前データ（監査ログ用） |
-| new_values | json | NULL | 変更後データ（監査ログ用） |
-| **アクセスログ用フィールド** |  |  |  |
-| access_type | enum('login','logout','page_access','api_access','download','upload','error') | NULL | アクセス種別 |
-| page_url | varchar(500) | NULL | アクセスページURL |
-| page_name | varchar(100) | NULL | ページ名 |
-| http_method | enum('GET','POST','PUT','DELETE','PATCH') | NULL | HTTPメソッド |
-| request_params | json | NULL | リクエストパラメータ |
-| response_status | int(11) | NULL | レスポンスステータス |
-| response_time_ms | int(11) | NULL | レスポンス時間（ミリ秒） |
-| referer | varchar(500) | NULL | リファラー |
-| **セキュリティログ用フィールド** |  |  |  |
-| event_type | enum('login_success','login_failure','password_change','account_lock','permission_denied','suspicious_access','data_export','admin_access') | NULL | セキュリティイベント種別 |
-| severity | enum('low','medium','high','critical') | DEFAULT 'medium' | 重要度 |
-| target_resource | varchar(200) | NULL | 対象リソース |
-| failure_reason | varchar(200) | NULL | 失敗理由 |
-| **共通フィールド** |  |  |  |
-| description | text | NULL | イベント詳細・説明 |
 | ip_address | varchar(45) | NULL | IPアドレス |
+| table_name | varchar(50) | NULL | 対象テーブル名 |
+| record_id | varchar(50) | NULL | 対象レコードID |
+| old_values | json | NULL | 変更前データ |
+| new_values | json | NULL | 変更後データ |
 | additional_data | json | NULL | 追加データ・その他情報 |
+| description | text | NULL | イベント詳細・説明 |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | ログ記録日時 |
+
+
+
+#### `login_attempt_counts`テーブル（ログイン試行回数管理）
+ユーザーがパスワードを間違えた際に登録される
+| フィールド名 | データ型 | 制約 | 説明 |
+|-------------|----------|------|------|
+| user_id | varchar(8) | PRIMARY KEY | ユーザーID |
+| failed_attempts | tinyint(1) | DEFAULT 0 | 連続失敗回数 |
+| last_failed_at | datetime | NULL | 最終失敗日時 |
 
 ### 9. システム管理系
 
@@ -242,7 +235,7 @@ detail/control/relation_control.phpファイルに内容あり
 | user_name | varchar(50) | NOT NULL | ユーザー名 |
 | password_hash | varchar(255) | NOT NULL | パスワードハッシュ |
 | department_id | varchar(20) | FOREIGN KEY NOT NULL | 部署ID |
-| role | enum('admin','editor','viewer') | DEFAULT 'viewer' | 権限レベル |
+| role | enum('admin','editor','viewer','system_admin') | DEFAULT 'viewer' | 権限レベル |
 | is_active | tinyint(1) | DEFAULT 1 | アカウント有効フラグ |
 | last_login_at | datetime | NULL | 最終ログイン日時 |
 | created_at | datetime | DEFAULT CURRENT_TIMESTAMP | 作成日時 |

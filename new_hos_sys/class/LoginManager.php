@@ -107,6 +107,9 @@ class LoginManager {
         $st = $this->pdo->prepare('UPDATE users SET last_login_at=NOW() WHERE user_id=?');
         $st->execute([$userId]);
         
+        // ログイン成功時にfailed_attemptsをリセット
+        $this->resetFailedAttempts($userId);
+        
         // ログイン成功ログをunified_logsに記録
         if ($this->logManager) {
             $sessionId = session_id();
@@ -119,8 +122,14 @@ class LoginManager {
      * @param string $key
      */
     public function rlRecord(string $key): void {
+        // keyからuser_idを抽出（uid:で始まる場合のみlogin_attempt_countsを使用）
+        if (strpos($key, 'uid:') === 0) {
+            $userId = substr($key, 4);
+            $this->incrementFailedAttempts($userId);
+        }
+        
+        // 従来のログ記録も並行して実行（統計用）
         if ($this->logManager) {
-            // keyからuser_idを抽出（uid:で始まる場合）
             $userId = null;
             if (strpos($key, 'uid:') === 0) {
                 $userId = substr($key, 4);
@@ -138,11 +147,154 @@ class LoginManager {
      * @return bool
      */
     public function rlTooMany(string $key, int $limit, string $intervalSql): bool {
+        // ユーザーIDベースの場合はlogin_attempt_countsテーブルをチェック
+        if (strpos($key, 'uid:') === 0) {
+            $userId = substr($key, 4);
+            // 古い試行履歴をクリーンアップしてからチェック
+            $this->cleanupOldAttempts($userId);
+            return $this->isUserRateLimitExceeded($userId, $limit);
+        }
+        
+        // IPアドレスベースの場合は従来通り
         if (!$this->logManager) {
             return false;
         }
         
         return $this->logManager->isRateLimitExceeded($key, $limit, $intervalSql);
+    }
+
+    /**
+     * ユーザーの失敗試行回数を増加させる
+     * @param string $userId
+     */
+    private function incrementFailedAttempts(string $userId): void {
+        try {
+            $stmt = $this->pdo->prepare("
+                INSERT INTO login_attempt_counts (user_id, failed_attempts, last_failed_at) 
+                VALUES (?, 1, NOW()) 
+                ON DUPLICATE KEY UPDATE 
+                    failed_attempts = failed_attempts + 1, 
+                    last_failed_at = NOW()
+            ");
+            $stmt->execute([$userId]);
+        } catch (Exception $e) {
+            error_log("Failed to increment login attempts: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * ユーザーの失敗試行回数をリセットする（ログイン成功時）
+     * @param string $userId
+     */
+    private function resetFailedAttempts(string $userId): void {
+        try {
+            $stmt = $this->pdo->prepare("
+                UPDATE login_attempt_counts 
+                SET failed_attempts = 0, last_failed_at = NULL 
+                WHERE user_id = ?
+            ");
+            $stmt->execute([$userId]);
+        } catch (Exception $e) {
+            error_log("Failed to reset login attempts: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * ユーザーのレートリミットが超過しているかチェック
+     * @param string $userId
+     * @param int $limit
+     * @return bool
+     */
+    private function isUserRateLimitExceeded(string $userId, int $limit): bool {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT failed_attempts, last_failed_at 
+                FROM login_attempt_counts 
+                WHERE user_id = ? AND failed_attempts >= ?
+            ");
+            $stmt->execute([$userId, $limit]);
+            $row = $stmt->fetch();
+            
+            if (!$row) {
+                return false;
+            }
+            
+            // 15分以内の失敗があるかチェック
+            $lastFailed = strtotime($row['last_failed_at']);
+            $fifteenMinutesAgo = time() - (15 * 60);
+            
+            return $lastFailed > $fifteenMinutesAgo;
+            
+        } catch (Exception $e) {
+            error_log("Failed to check rate limit: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * 古い試行履歴をクリーンアップ（15分以上経過したレコードをリセット）
+     * @param string|null $userId 特定ユーザーのみクリーンアップする場合は指定、nullで全体
+     */
+    private function cleanupOldAttempts(?string $userId = null): void {
+        try {
+            if ($userId !== null) {
+                // 特定ユーザーのクリーンアップ
+                $stmt = $this->pdo->prepare("
+                    UPDATE login_attempt_counts 
+                    SET failed_attempts = 0, last_failed_at = NULL 
+                    WHERE user_id = ? AND last_failed_at < DATE_SUB(NOW(), INTERVAL 15 MINUTE)
+                ");
+                $stmt->execute([$userId]);
+            } else {
+                // 全体のクリーンアップ
+                $stmt = $this->pdo->prepare("
+                    UPDATE login_attempt_counts 
+                    SET failed_attempts = 0, last_failed_at = NULL 
+                    WHERE last_failed_at < DATE_SUB(NOW(), INTERVAL 15 MINUTE)
+                ");
+                $stmt->execute();
+            }
+        } catch (Exception $e) {
+            error_log("Failed to cleanup old attempts: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * 全ユーザーの古い試行履歴を定期的にクリーンアップ
+     * 通常は1日1回程度バッチ処理で呼び出すことを想定
+     */
+    public function batchCleanupOldAttempts(): void {
+        $this->cleanupOldAttempts();
+    }
+
+    /**
+     * ユーザーの現在の失敗試行回数を取得
+     * @param string $userId
+     * @return array ['failed_attempts' => int, 'last_failed_at' => string|null]
+     */
+    public function getUserFailedAttempts(string $userId): array {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT failed_attempts, last_failed_at 
+                FROM login_attempt_counts 
+                WHERE user_id = ?
+            ");
+            $stmt->execute([$userId]);
+            $row = $stmt->fetch();
+            
+            if (!$row) {
+                return ['failed_attempts' => 0, 'last_failed_at' => null];
+            }
+            
+            return [
+                'failed_attempts' => (int)$row['failed_attempts'],
+                'last_failed_at' => $row['last_failed_at']
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Failed to get user failed attempts: " . $e->getMessage());
+            return ['failed_attempts' => 0, 'last_failed_at' => null];
+        }
     }
 
     // ログアウト処理

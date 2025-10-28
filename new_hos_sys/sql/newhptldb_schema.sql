@@ -112,6 +112,11 @@ CREATE TABLE hospital_code_history (
     hospital_id varchar(10) NOT NULL COMMENT '現在の医療機関コード',
     former_hospital_id varchar(10) NOT NULL COMMENT '以前の医療機関コード',
     change_date date NULL COMMENT 'コード更新日',
+    
+    INDEX idx_hospital_code_history_hospital_id (hospital_id),
+    INDEX idx_hospital_code_history_former_hospital_id (former_hospital_id),
+    INDEX idx_hospital_code_history_change_date (change_date),
+    
     FOREIGN KEY (hospital_id) REFERENCES hospitals(hospital_id)
 ) COMMENT = '現在の医療機関コードと、過去に使用されていたコードを紐づけ';
 
@@ -206,7 +211,27 @@ CREATE TABLE kawasaki_university_facilities (
 
 DROP TABLE IF EXISTS kawasaki_university_departments;
 CREATE TABLE kawasaki_university_departments (
-    department_id varchar(50) PRIMARY KEY COMMENT '部署ID',
+    department_id varchar(20) PRIMARY KEY COMMENT '部署ID',
+    facility_id varchar(20) NOT NULL COMMENT '施設ID',
+    department_name varchar(50) NOT NULL COMMENT '部署名',
+    is_active tinyint(1) DEFAULT 1 COMMENT '有効フラグ',
+    display_order int(11) NOT NULL DEFAULT 0 COMMENT '表示順序',
+    FOREIGN KEY (facility_id) REFERENCES kawasaki_university_facilities(facility_id)
+) COMMENT = '川崎学園の部署情報を管理';
+
+-- 川崎学園マスタテーブルを先に作成
+DROP TABLE IF EXISTS kawasaki_university_facilities;
+CREATE TABLE kawasaki_university_facilities (
+    facility_id varchar(20) PRIMARY KEY COMMENT '施設ID',
+    facility_name varchar(50) NOT NULL COMMENT '施設名',
+    abbreviation varchar(50) NULL COMMENT '略名',
+    is_active tinyint(1) DEFAULT 1 COMMENT '有効フラグ',
+    display_order int(11) NOT NULL DEFAULT 0 COMMENT '表示順序'
+) COMMENT = '川崎学園の病院情報を管理（附属病院、総合医療センター、高齢者医療センター）';
+
+DROP TABLE IF EXISTS kawasaki_university_departments;
+CREATE TABLE kawasaki_university_departments (
+    department_id varchar(20) PRIMARY KEY COMMENT '部署ID',
     facility_id varchar(20) NOT NULL COMMENT '施設ID',
     department_name varchar(50) NOT NULL COMMENT '部署名',
     is_active tinyint(1) DEFAULT 1 COMMENT '有効フラグ',
@@ -219,69 +244,56 @@ CREATE TABLE users (
     user_id varchar(8) PRIMARY KEY COMMENT 'ユーザーID',
     user_name varchar(50) NOT NULL COMMENT 'ユーザー名',
     password_hash varchar(255) NOT NULL COMMENT 'パスワードハッシュ',
-    department_id varchar(50) NOT NULL COMMENT '所属部署ID',
+    department_id varchar(20) NOT NULL COMMENT '所属部署ID',
     role enum('admin','editor','viewer','system_admin') DEFAULT 'viewer' COMMENT '権限レベル',
     is_active tinyint(1) DEFAULT 1 COMMENT 'アカウント有効フラグ',
     last_login_at datetime NULL COMMENT '最終ログイン日時',
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
     updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    
+    INDEX idx_users_user_name (user_name),
+    INDEX idx_users_active (is_active),
+    INDEX idx_users_department (department_id),
+    INDEX idx_users_role (role),
+    INDEX idx_users_last_login (last_login_at),
+    INDEX idx_users_created_at (created_at),
+    INDEX idx_users_active_role (is_active, role),
+    
     FOREIGN KEY (department_id) REFERENCES kawasaki_university_departments(department_id)
 ) COMMENT = 'システム利用者の情報を管理';
 
 DROP TABLE IF EXISTS unified_logs;
 CREATE TABLE unified_logs (
     log_id bigint(20) PRIMARY KEY AUTO_INCREMENT COMMENT 'ログID',
-    log_type enum('audit','login_attempt','access','security') NOT NULL COMMENT 'ログ種別',
+    log_type enum('audit','security') NOT NULL COMMENT 'ログ種別',
+    action_type varchar(20) NOT NULL COMMENT '操作種別',
     user_id varchar(8) COMMENT 'ユーザーID',
-    session_id varchar(64) COMMENT 'セッションID',
-    
-    -- 監査ログ用フィールド
-    table_name varchar(50) COMMENT '対象テーブル名（監査ログ用）',
-    record_id varchar(50) COMMENT '対象レコードID（監査ログ用）',
-    action_type enum('INSERT','UPDATE','DELETE') COMMENT '操作種別（監査ログ用）',
-    old_values json COMMENT '変更前データ（監査ログ用）',
-    new_values json COMMENT '変更後データ（監査ログ用）',
-    
-    -- アクセスログ用フィールド
-    access_type enum('login','logout','page_access','api_access','download','upload','error') COMMENT 'アクセス種別',
-    page_url varchar(500) COMMENT 'アクセスページURL',
-    page_name varchar(100) COMMENT 'ページ名',
-    http_method enum('GET','POST','PUT','DELETE','PATCH') COMMENT 'HTTPメソッド',
-    request_params json COMMENT 'リクエストパラメータ',
-    response_status int(11) COMMENT 'レスポンスステータス',
-    response_time_ms int(11) COMMENT 'レスポンス時間（ミリ秒）',
-    referer varchar(500) COMMENT 'リファラー',
-    
-    -- セキュリティログ用フィールド
-    event_type enum('login_success','login_failure','password_change','account_lock','permission_denied','suspicious_access','data_export','admin_access') COMMENT 'セキュリティイベント種別',
-    severity enum('low','medium','high','critical') DEFAULT 'medium' COMMENT '重要度',
-    target_resource varchar(200) COMMENT '対象リソース',
-    failure_reason varchar(200) COMMENT '失敗理由',
-    
-    -- 共通フィールド
-    description text COMMENT 'イベント詳細・説明',
-    ip_address varchar(45) COMMENT 'IPアドレス',
-    user_agent text COMMENT 'ユーザーエージェント',
-    facility_id varchar(30) COMMENT '所属施設ID',
-    department_id varchar(30) COMMENT '所属部署ID',
-    is_admin tinyint(1) DEFAULT 0 COMMENT '管理者フラグ',
-    additional_data json COMMENT '追加データ・その他情報',
+    ip_address varchar(45) NULL COMMENT 'IPアドレス',
+    table_name varchar(50) NULL COMMENT '対象テーブル名',
+    record_id varchar(50) NULL COMMENT '対象レコードID',
+    old_values json NULL COMMENT '変更前データ',
+    new_values json NULL COMMENT '変更後データ',
+    additional_data json NULL COMMENT '追加データ・その他情報',
+    description text NULL COMMENT 'イベント詳細・説明',
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'ログ記録日時',
     
-    -- インデックス
-    INDEX idx_log_type (log_type),
-    INDEX idx_user_id (user_id),
-    INDEX idx_action_type (action_type),
-    INDEX idx_access_type (access_type),
-    INDEX idx_event_type (event_type),
-    INDEX idx_severity (severity),
-    INDEX idx_created_at (created_at),
-    INDEX idx_session_id (session_id),
-    INDEX idx_ip_address (ip_address),
-    INDEX idx_table_record (table_name, record_id),
-    
+    INDEX log_type_idx (log_type),
+    INDEX action_type_idx (action_type),
+    INDEX user_id_idx (user_id),
+    INDEX table_name_idx (table_name),
+    INDEX record_id_idx (record_id),
+    INDEX created_at_idx (created_at),
+
     FOREIGN KEY (user_id) REFERENCES users(user_id)
-) COMMENT = '統合ログテーブル（監査・アクセス・セキュリティ・ログイン試行すべてを管理）';
+) COMMENT = 'システム内のすべてのログ情報を一元管理する統合ログテーブル';
+
+DROP TABLE IF EXISTS login_attempt_counts;
+CREATE TABLE login_attempt_counts (
+    user_id varchar(8) PRIMARY KEY COMMENT 'ユーザーID',
+    failed_attempts tinyint(3) DEFAULT 0 COMMENT '連続失敗回数',
+    last_failed_at datetime NULL COMMENT '最終失敗日時',
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+) COMMENT = 'ユーザーがパスワードを間違えた際に登録される';
 
 DROP TABLE IF EXISTS referrals;
 CREATE TABLE referrals (
@@ -356,6 +368,13 @@ CREATE TABLE inquires (
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '問い合わせ日時',
     updated_at date NULL COMMENT '回答日',
     resolved_at date NULL COMMENT '対応終了日',
+    
+    INDEX idx_inquires_user_id (user_id),
+    INDEX idx_inquires_status (status),
+    INDEX idx_inquires_priority (priority),
+    INDEX idx_inquires_assigned_to (assigned_to),
+    INDEX idx_inquires_created_at (created_at),
+    
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (assigned_to) REFERENCES users(user_id)
 ) COMMENT = 'システムに関する問い合わせ内容を管理';
@@ -377,6 +396,11 @@ CREATE TABLE maintenances (
     created_by varchar(8) COMMENT '作成者ユーザーID',
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
     updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    
+    INDEX idx_maintenances_date (date),
+    INDEX idx_maintenances_view (view),
+    INDEX idx_maintenances_created_by (created_by),
+    
     FOREIGN KEY (created_by) REFERENCES users(user_id)
 ) COMMENT = '事前メンテナンス通知を管理';
 
@@ -392,6 +416,10 @@ CREATE TABLE maintenance_start (
     created_by varchar(8) COMMENT '作成者ユーザーID',
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
     updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    
+    INDEX idx_maintenance_start_maintenance_id (maintenance_id),
+    INDEX idx_maintenance_start_view (view),
+    
     FOREIGN KEY (maintenance_id) REFERENCES maintenances(maintenance_id),
     FOREIGN KEY (created_by) REFERENCES users(user_id)
 ) COMMENT = 'メンテナンス実行中の通知を管理';
@@ -405,7 +433,10 @@ CREATE TABLE system_versions (
     is_current tinyint(1) DEFAULT 0 COMMENT '現在稼働バージョンフラグ',
     release_notes text NULL COMMENT 'リリースノート・変更内容',
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
-    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時'
+    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    
+    INDEX idx_system_versions_is_current (is_current),
+    INDEX idx_system_versions_release_date (release_date)
 ) COMMENT = 'システムのバージョン情報を最小限で管理';
 
 -- メッセージテーブル（システム更新履歴・要望管理）
@@ -420,6 +451,12 @@ CREATE TABLE messages (
     res_date date NULL COMMENT '対応日',
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
     updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    
+    INDEX idx_messages_status (status),
+    INDEX idx_messages_assigned_to (assigned_to),
+    INDEX idx_messages_version_id (version_id),
+    INDEX idx_messages_created_at (created_at),
+    
     FOREIGN KEY (version_id) REFERENCES system_versions(version_id),
     FOREIGN KEY (assigned_to) REFERENCES users(user_id)
 ) COMMENT = 'システムの更新履歴、実装予定機能掲載、現状報告を管理';
@@ -434,6 +471,11 @@ CREATE TABLE system_status (
     changed_by varchar(8) NOT NULL COMMENT '状態変更者ユーザーID',
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
     updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    
+    INDEX idx_system_status_system_mode (system_mode),
+    INDEX idx_system_status_maintenance_id (maintenance_id),
+    INDEX idx_system_status_created_at (created_at),
+    
     FOREIGN KEY (maintenance_id) REFERENCES maintenances(maintenance_id),
     FOREIGN KEY (changed_by) REFERENCES users(user_id)
 ) COMMENT = '現在のシステムモードと状態を管理するシンプルなテーブル';
@@ -456,6 +498,14 @@ CREATE TABLE relatives (
     is_deleted tinyint(1) DEFAULT 0 COMMENT '削除フラグ',
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
     updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
+    
+    INDEX idx_relatives_hospital_id (hospital_id),
+    INDEX idx_relatives_relative_name (relative_name),
+    INDEX idx_relatives_connection (connection),
+    INDEX idx_relatives_graduation_year (graduation_year),
+    INDEX idx_relatives_is_deleted (is_deleted),
+    INDEX idx_relatives_created_at (created_at),
+    
     FOREIGN KEY (hospital_id) REFERENCES hospitals(hospital_id)
 ) COMMENT = '医療機関に関連する人物の親族情報を管理';
 
@@ -472,74 +522,19 @@ CREATE TABLE social_meetings (
     created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT '作成日時',
     updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新日時',
     PRIMARY KEY (hospital_id, facility_id, meeting_year),
+    
+    INDEX idx_social_meetings_hospital_id (hospital_id),
+    INDEX idx_social_meetings_facility_id (facility_id),
+    INDEX idx_social_meetings_meeting_year (meeting_year),
+    INDEX idx_social_meetings_created_at (created_at),
+    
     FOREIGN KEY (hospital_id) REFERENCES hospitals(hospital_id)
 ) COMMENT = '医療連携懇話会への参加年度を管理';
 
 -- 外部キー制約チェックを再度有効化
 SET FOREIGN_KEY_CHECKS = 1;
 
--- =================================================================
--- インデックス追加（パフォーマンス向上）
--- =================================================================
 
--- maintenancesテーブル
-CREATE INDEX idx_maintenances_date ON maintenances(date);
-CREATE INDEX idx_maintenances_view ON maintenances(view);
-CREATE INDEX idx_maintenances_created_by ON maintenances(created_by);
-
--- maintenance_startテーブル
-CREATE INDEX idx_maintenance_start_maintenance_id ON maintenance_start(maintenance_id);
-CREATE INDEX idx_maintenance_start_view ON maintenance_start(view);
-
--- system_versionsテーブル
-CREATE INDEX idx_system_versions_is_current ON system_versions(is_current);
-CREATE INDEX idx_system_versions_release_date ON system_versions(release_date);
-
--- messagesテーブル
-CREATE INDEX idx_messages_status ON messages(status);
-CREATE INDEX idx_messages_assigned_to ON messages(assigned_to);
-CREATE INDEX idx_messages_version_id ON messages(version_id);
-CREATE INDEX idx_messages_created_at ON messages(created_at);
-
--- system_statusテーブル
-CREATE INDEX idx_system_status_system_mode ON system_status(system_mode);
-CREATE INDEX idx_system_status_maintenance_id ON system_status(maintenance_id);
-CREATE INDEX idx_system_status_created_at ON system_status(created_at);
-
--- inquiresテーブル
-CREATE INDEX idx_inquires_user_id ON inquires(user_id);
-CREATE INDEX idx_inquires_status ON inquires(status);
-CREATE INDEX idx_inquires_priority ON inquires(priority);
-CREATE INDEX idx_inquires_assigned_to ON inquires(assigned_to);
-CREATE INDEX idx_inquires_created_at ON inquires(created_at);
-
--- usersテーブル
-CREATE INDEX idx_users_user_name ON users(user_name);
-CREATE INDEX idx_users_active ON users(is_active);
-CREATE INDEX idx_users_department ON users(department_id);
-CREATE INDEX idx_users_role ON users(role);
-CREATE INDEX idx_users_last_login ON users(last_login_at);
-CREATE INDEX idx_users_created_at ON users(created_at);
-CREATE INDEX idx_users_active_role ON users(is_active, role);
-
--- hospital_code_historyテーブル
-CREATE INDEX idx_hospital_code_history_hospital_id ON hospital_code_history(hospital_id);
-CREATE INDEX idx_hospital_code_history_former_hospital_id ON hospital_code_history(former_hospital_id);
-CREATE INDEX idx_hospital_code_history_change_date ON hospital_code_history(change_date);
-
--- relativesテーブル
-CREATE INDEX idx_relatives_hospital_id ON relatives(hospital_id);
-CREATE INDEX idx_relatives_relative_name ON relatives(relative_name);
-CREATE INDEX idx_relatives_connection ON relatives(connection);
-CREATE INDEX idx_relatives_graduation_year ON relatives(graduation_year);
-CREATE INDEX idx_relatives_is_deleted ON relatives(is_deleted);
-CREATE INDEX idx_relatives_created_at ON relatives(created_at);
-
--- social_meetingsテーブル
-CREATE INDEX idx_social_meetings_hospital_id ON social_meetings(hospital_id);
-CREATE INDEX idx_social_meetings_facility_id ON social_meetings(facility_id);
-CREATE INDEX idx_social_meetings_meeting_year ON social_meetings(meeting_year);
-CREATE INDEX idx_social_meetings_created_at ON social_meetings(created_at);
 
 -- =================================================================
 -- ログ確認用ビュー（統合ログテーブル用）
@@ -558,20 +553,6 @@ WHERE log_type = 'audit'
 GROUP BY table_name, action_type
 ORDER BY table_name, action_type;
 
--- アクセス統計ビュー
-CREATE VIEW access_summary AS
-SELECT 
-    DATE(created_at) as access_date,
-    access_type,
-    COUNT(*) as access_count,
-    COUNT(DISTINCT user_id) as unique_users,
-    COUNT(DISTINCT ip_address) as unique_ips
-FROM unified_logs 
-WHERE log_type = 'access' 
-   AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-GROUP BY DATE(created_at), access_type
-ORDER BY access_date DESC, access_type;
-
 -- セキュリティアラートビュー
 CREATE VIEW security_alerts AS
 SELECT 
@@ -581,8 +562,7 @@ SELECT
 FROM unified_logs ul
 LEFT JOIN users u ON ul.user_id = u.user_id
 WHERE ul.log_type = 'security'
-   AND (ul.severity IN ('high', 'critical')
-        OR ul.event_type IN ('login_failure', 'permission_denied', 'suspicious_access'))
+   AND (ul.action_type IN ('login_failure', 'permission_denied', 'suspicious_access'))
 ORDER BY ul.created_at DESC;
 
 -- ユーザーアクティビティビュー
@@ -594,7 +574,7 @@ SELECT
     COUNT(DISTINCT DATE(ul.created_at)) as active_days,
     COUNT(ul.log_id) as total_accesses,
     MAX(ul.created_at) as last_access,
-    COUNT(CASE WHEN ul.access_type = 'login' THEN 1 END) as login_count
+    COUNT(CASE WHEN ul.action_type = 'login' THEN 1 END) as login_count
 FROM users u
 LEFT JOIN unified_logs ul ON u.user_id = ul.user_id 
 WHERE ul.log_type = 'access'
@@ -767,9 +747,7 @@ SELECT
     DATE(ul.created_at) as usage_date,
     COUNT(DISTINCT ul.user_id) as unique_users,
     COUNT(CASE WHEN ul.log_type = 'access' THEN 1 END) as total_accesses,
-    COUNT(CASE WHEN ul.access_type = 'login' THEN 1 END) as login_count,
-    COUNT(CASE WHEN ul.log_type = 'audit' THEN 1 END) as audit_actions,
-    COUNT(CASE WHEN ul.log_type = 'security' AND ul.severity IN ('high', 'critical') THEN 1 END) as security_alerts
+    COUNT(CASE WHEN ul.log_type = 'audit' THEN 1 END) as audit_actions
 FROM unified_logs ul
 WHERE ul.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
 GROUP BY DATE(ul.created_at)
