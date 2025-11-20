@@ -1,10 +1,11 @@
 <?php
 // シンプルなルーティング処理
+require_once __DIR__ . '/../config/config.php';
 $routes = require __DIR__ . '/../routes/web.php';
 session_start();
 
-// ベースパスを定義
-$basePath = '/software_dev/rebuild/hospital_system/public';
+// ベースパスを定義（config.php の BASE_PATH を使用）
+$basePath = BASE_PATH;
 
 $request = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $request = urldecode(rtrim($request));

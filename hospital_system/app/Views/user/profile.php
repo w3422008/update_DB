@@ -5,6 +5,6 @@
 <h1>ユーザープロフィール</h1>
 <p>名前: <?= htmlspecialchars($user->name) ?></p>
 <p>メール: <?= htmlspecialchars($user->email) ?></p>
-<p><a href="router.php/">ホームへ戻る</a></p>
+<p><a href="<?php echo route('/'); ?>">ホームへ戻る</a></p>
 </body>
 </html>
