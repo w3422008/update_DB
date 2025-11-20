@@ -1,9 +1,19 @@
 <?php
-define('BASE_PATH', '/加藤/revision/hospital_system/public/router.php');
+// BASE_PATH：router.phpにてルーティングするための基準パス
+define('BASE_PATH', '/software_dev/rebuild/hospital_system/public/router.php');
+// ASSETS_PATH：CSSやJS、画像などのアセットファイルの基準パス
+define( 'ASSETS_PATH', '/software_dev/rebuild/hospital_system/public/' );
 
+// ルーティング用のヘルパー関数
 function route($path) {
     return BASE_PATH . $path;
 }
+
+// CSSやJS、画像などのアセットファイルのヘルパー関数
+function asset($path) {
+    return ASSETS_PATH . $path;
+}
+
 
 return [
     'db' => [

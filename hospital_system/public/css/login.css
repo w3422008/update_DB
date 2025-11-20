@@ -1,0 +1,131 @@
+/* login.css - ログイン画面専用スタイル（画像レイアウト・色に合わせて調整） */
+.wrap {
+	max-width: 900px;
+	margin: 0 auto;
+}
+h1 {
+	color: #217a3a;
+	font-size: 2.5rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	margin-left: 2.5rem;
+}
+form {
+	padding: 0 2rem 2rem 2rem;
+	max-width: 300px;
+	margin: 0 auto 1.0rem auto;
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+}
+label {
+	color: #217a3a;
+	font-weight: 600;
+	margin-bottom: .3rem;
+	font-size: 1.0rem;
+}
+input[type="text"], input[type="password"] {
+	width: 100%;
+	padding: 0.7rem 2.5rem 0.7rem 2.5rem;
+	border: 1px solid #b7d7c2;
+	border-radius: 30px;
+	background: #f8fefb;
+	font-size: 1.0rem;
+	outline: none;
+	box-sizing: border-box;
+	position: relative;
+}
+input[type="text"] {
+	    background-image: url('data:image/svg+xml;utf8,<svg fill="%23217a3a" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" width="25" height="25"><!--!Font Awesome Free v7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M240 192C240 147.8 275.8 112 320 112C364.2 112 400 147.8 400 192C400 236.2 364.2 272 320 272C275.8 272 240 236.2 240 192zM448 192C448 121.3 390.7 64 320 64C249.3 64 192 121.3 192 192C192 262.7 249.3 320 320 320C390.7 320 448 262.7 448 192zM144 544C144 473.3 201.3 416 272 416L368 416C438.7 416 496 473.3 496 544L496 552C496 565.3 506.7 576 520 576C533.3 576 544 565.3 544 552L544 544C544 446.8 465.2 368 368 368L272 368C174.8 368 96 446.8 96 544L96 552C96 565.3 106.7 576 120 576C133.3 576 144 565.3 144 552L144 544z"/></svg>');
+	background-repeat: no-repeat;
+	background-position: 12px center;
+}
+input[type="password"] {
+	background-image: url('data:image/svg+xml;utf8,<svg fill="%23217a3a" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6-7V7a6 6 0 0 0-12 0v3a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2zm-8-3a4 4 0 0 1 8 0v3H6V7z"/></svg>');
+	background-repeat: no-repeat;
+	background-position: 12px center;
+}
+button {
+	width: 100%;
+	max-width: 400px;
+    height: auto;
+	margin: 1rem auto;
+	padding: 1rem 0;
+	border: none;
+	border-radius: 30px;
+	background: #217a3a;
+	color: #fff;
+	font-size: 1.2rem;
+	font-weight: 700;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+button:hover {
+	background: #1a5e2c;
+}
+.err {
+	color: #b00020;
+	margin-bottom: .5rem;
+	font-size: 1rem;
+	text-align: center;
+}
+
+
+/* --- タブ・パネル部分 画像準拠デザイン --- */
+.tabs {
+	display: flex;
+	max-width: 1000px;
+	border: 1px solid #bbb;
+	border-bottom: none;
+	background: #fff;
+}
+.tab {
+	flex: 1;
+	text-align: center;
+	padding: 0.8rem 0;
+	background: #fff;
+	color: #888;
+	font-weight: 600;
+	font-size: 0.9rem;
+	border-right: 1px solid #eee;
+	border-radius: 0;
+	cursor: pointer;
+	transition: background 0.2s, color 0.2s;
+	position: relative;
+}
+.tab:last-child {
+	border-right: none;
+}
+
+.tab.active {
+	background: #fff;
+	color: #217a3a;
+	font-weight: 700;
+	border-bottom: 3px solid #217a3a;
+}
+
+/* タブアイコン */
+.tab-icon {
+	display: inline-flex;
+	align-items: center;
+	margin-right: 6px;
+	vertical-align: middle;
+}
+
+/* アクティブタブのアイコン色変更 */
+.tab.active .tab-icon svg {
+	fill: #217a3a;
+}
+
+.panel {
+	border: 1px solid #bbb;
+	background: #fff;
+	padding: 1.5rem 1.5rem 1.5rem 2.5rem;
+	min-height: 350px;
+	max-width: 1000px;
+	margin: 0 auto 2rem auto;
+	font-size: 1.05rem;
+	border-top: none;
+	overflow-y: auto;
+	box-sizing: border-box;
+}

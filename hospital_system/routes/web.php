@@ -1,5 +1,5 @@
 <?php
 return [
-    '/' => ['controller' => 'HomeController', 'method' => 'index'],
+    '/' => ['controller' => 'LoginController', 'method' => 'login'],
     '/user' => ['controller' => 'UserController', 'method' => 'profile'],
 ];

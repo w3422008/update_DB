@@ -1,0 +1,158 @@
+/* AppCore.css - 全画面共通スタイル（フォントなど） */
+body {
+  font-family: "游ゴシック", "ヒラギノ角ゴ ProN", "メイリオ", "MS Pゴシック", sans-serif ;
+  background: #fff;
+}
+
+/* ナビゲーションバー */
+.uk-navbar-container.bg-navbar1 { 
+    background-color: #fff;
+    min-height: 70px;
+    margin: 0.5em 2em 0 2em;
+}
+
+.bg-navbar2 {
+    background-color: #ffffff !important;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    margin: 1.5em 1em;
+}
+
+/* ナビゲーションバーのトグルボタン */
+.uk-navbar-toggle {
+    color: #22663f !important;
+    min-height: 40px;
+}
+
+.uk-navbar-toggle:hover {
+    color: #4e9c70 !important;
+}
+
+.uk-navbar-toggle:focus {
+    outline: none;
+    color: #22663f !important;
+}
+
+/* ドロップダウンメニューのスタイル */
+.uk-dropdown-nav {
+    padding: 0;
+}
+
+.uk-dropdown-nav > li {
+    padding: 0;
+}
+
+/* 権限バッジセクション */
+.user-role-badge {
+    text-align: left;
+    padding: 8px 16px 5px 16px;
+}
+
+.role-badge {
+    display: inline-block;
+    background-color: #666;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.user-info-lines {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.user-info-line {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.user-info-line:last-child {
+    margin-bottom: 0;
+}
+
+.user-id, .user-name {
+    color: #333;
+    font-weight: 400;
+}
+
+.user-id{
+    font-size: 0.85rem;
+}
+
+.user-name{
+    font-size: 1.3rem;
+    font-weight: 500;
+}
+
+/* メニューアイテム */
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    color: #666 !important;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
+}
+
+.menu-item:hover {
+    background-color: #f8f8f8 !important;
+    color: #333 !important;
+}
+
+.menu-icon {
+    margin-right: 10px;
+    color: #999;
+    font-size: 1rem;
+}
+
+/* 区切り線 */
+.uk-nav-divider {
+    margin: 0;
+    border-top: 1px solid #f0f0f0;
+}
+
+
+/* ロゴ */
+.uk-logo {
+    font-size: 2.2rem !important;
+    color: #22663f !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+}
+
+.uk-logo:hover {
+    color: #4e9c70 !important;
+    text-decoration: none !important;
+}
+
+/* パンくずリスト */
+.uk-breadcrumb {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+}
+
+.uk-breadcrumb li {
+    display: inline-block;
+}
+
+.uk-breadcrumb li + li:before {
+    content: " / ";
+    padding: 0 8px;
+    color: #999;
+}
+
+/* レスポンシブ対応 */
+@media screen and (max-width: 460px){
+    .uk-logo {font-size: 1.5rem !important;}
+    .uk-navbar-container {padding: 0 15px;}
+}
+

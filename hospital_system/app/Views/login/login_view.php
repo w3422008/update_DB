@@ -4,10 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>医療機関情報システム - ログイン</title>
-  <link rel="icon" type="image/png" href="../../../favicon.ico">
-  <link rel="stylesheet" href="../../../CSS/AppCore.css">
-  <link rel="stylesheet" href="../../../CSS/login.css">
-  <script src="../../js/login/login_auth.js"></script>
+  <link rel="icon" type="image/png" href="<?php echo asset('images/favicon/favicon.ico'); ?>">
+  <link rel="stylesheet" href="<?php echo asset('css/AppCore.css'); ?>">
+  <link rel="stylesheet" href="<?php echo asset('css/login.css'); ?>">
 </head>
 <body>
   <h1 class="site-title">医療機関情報システム</h1>
@@ -50,6 +49,9 @@
     </div>
     <div class="panel" id="panel">近日行われる予定はありません。</div>
   </div>
+  
+  <!-- ログイン処理用JS -->
+  <script src="<?php echo asset('js/login/login_auth.js'); ?>"></script>
   <script>
     // タブ切り替え用JS
     const tabs = document.querySelectorAll('#tabs .tab');
