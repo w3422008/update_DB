@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // APIへPOSTリクエスト送信
             try {
-            const res = await fetch('../../Controllers/api/LoginApiController.php', {
+            const res = await fetch('../../app/Controllers/api/LoginApiController.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: userId, password: password })
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (data.success) {
                 // ログイン後のページへ遷移
-                window.location.href = '../../control/menu.php';
+                window.location.href = 'router.php/home';
             } else {
                 if (errDiv) errDiv.textContent = data.message || 'ログインに失敗しました。';
             }

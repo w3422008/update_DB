@@ -19,10 +19,12 @@ class AppCore {
     /**
      * コンストラクタ：DB接続とセッション初期化
      */
-    public function __construct() {
+    public function __construct($initSession = true) {
         date_default_timezone_set('Asia/Tokyo'); // タイムゾーン設定
         $this->initDb();      // DB接続
-        $this->initSession(); // セッション初期化
+        if ($initSession) {
+            $this->initSession();                 // セッション初期化（必要な場合のみ）
+        }    
     }
 
     /**
