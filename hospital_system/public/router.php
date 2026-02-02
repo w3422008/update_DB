@@ -29,7 +29,7 @@ if ($route) {
     $controllerName = $route['controller'];
     $method = $route['method'];
     require_once __DIR__ . '/../app/Controllers/' . $controllerName . '.php';
-    $controller = new $controllerName();
+    $controller = new $controllerName($route['method']);
     $controller->$method();
 } else {
     http_response_code(404);
