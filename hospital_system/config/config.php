@@ -1,8 +1,8 @@
 <?php
 // BASE_PATH：router.phpにてルーティングするための基準パス
-define('BASE_PATH', '/software_dev/rebuild/hospital_system/public/router.php');
+define('BASE_PATH', '/revision/hospital_system/public/router.php');
 // ASSETS_PATH：CSSやJS、画像などのアセットファイルの基準パス
-define( 'ASSETS_PATH', '/software_dev/rebuild/hospital_system/public/' );
+define( 'ASSETS_PATH', '/revision/hospital_system/public/' );
 
 // ルーティング用のヘルパー関数
 function route($path) {
