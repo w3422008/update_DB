@@ -1,0 +1,6 @@
+.home-button {
+  background-color: seagreen;
+}
+.home-button:hover {
+  background-color: rgb(38, 116, 71);
+}

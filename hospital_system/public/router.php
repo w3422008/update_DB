@@ -7,6 +7,7 @@ session_start();
 // ベースパスを定義（config.php の BASE_PATH を使用）
 $basePath = BASE_PATH;
 
+// URIを取得し、ベースパスを除去
 $request = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $request = urldecode(rtrim($request));
 
