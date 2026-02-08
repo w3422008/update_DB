@@ -10,7 +10,8 @@
 
 <body>
     <h1>ユーザープロフィール</h1>
-    <p>名前: <?= htmlspecialchars($user->name) ?></p>
+    <p><?php echo $_SESSION['user_id']; ?></p>
+    <p><?= htmlspecialchars($user->name) ?></p>
     <p>メール: <?= htmlspecialchars($user->email) ?></p>
     <p>
         <a href="<?php echo route('/home'); ?>" class="default-button home-button">ホームへ戻る</a>

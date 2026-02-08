@@ -1,19 +1,23 @@
 <?php
 /**
  * AppCore.php
- * システムのコア機能を1つのクラスで管理します。
- * - DB接続
+ * システムのコア機能を1つのクラスで管理。
+ * - DB接続（CommonRepository から取得）
  * - セッション管理
  * - ユーザー認証
  * - ログイン履歴・レートリミット
  * - ユーザー情報取得
  * - APIレスポンス生成
+ * - ルーティング・アセットヘルパー
  *
- * どの処理が何をしているか、各メソッドに詳細コメントを記載しています。
+ * DB接続情報は CommonRepository で管理。
  */
 
+require_once __DIR__ . '/../Repositories/CommonRepository.php';
+require_once __DIR__ . '/../../config/config.php';
+
 class AppCore {
-    /** @var PDO $pdo DB接続用PDOインスタンス */
+    /** @var PDO $pdo DB接続用PDOインスタンス（CommonRepository から取得） */
     public $pdo;
 
     /**
@@ -29,23 +33,12 @@ class AppCore {
 
     /**
      * DB接続を初期化します。
+     * CommonRepository から DB 接続を取得して $pdo に保存します。
      * エラー時は500で終了。
      */
     private function initDb() {
-        $host = getenv('DB_HOST') ?: 'localhost';
-        $port = getenv('DB_PORT') ?: '3306';
-        $db   = getenv('DB_DATABASE') ?: 'newhptldb';
-        $user = getenv('DB_USERNAME') ?: 'root';
-        $pass = getenv('DB_PASSWORD') ?: '';
-
-        $dsn = "mysql:host={$host};port={$port};dbname={$db};charset=utf8mb4";
-
         try {
-            $this->pdo = new PDO($dsn, $user, $pass, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-            ]);
+            $this->pdo = CommonRepository::getDbConnection();
         } catch (PDOException $e) {
             http_response_code(500);
             echo 'DB connection failed: ' . htmlspecialchars($e->getMessage());
@@ -109,4 +102,27 @@ class AppCore {
 
     }
 
+}
+
+/**
+ * グローバルヘルパー関数
+ * ビュー内で短く route() と asset() を使用可能
+ */
+
+/**
+ * ルーティング用パスを生成
+ * @param string $path
+ * @return string
+ */
+function route(string $path): string {
+    return BASE_PATH . $path;
+}
+
+/**
+ * アセットファイルのパスを生成
+ * @param string $path
+ * @return string
+ */
+function asset(string $path): string {
+    return ASSETS_PATH . $path;
 }

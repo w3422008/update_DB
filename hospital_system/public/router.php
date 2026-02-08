@@ -1,8 +1,12 @@
 <?php
 // シンプルなルーティング処理
 require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../app/Models/AppCore.php';
 $routes = require __DIR__ . '/../routes/web.php';
 session_start();
+
+// AppCoreクラス取得
+$app = new AppCore(false);
 
 // ベースパスを定義（config.php の BASE_PATH を使用）
 $basePath = BASE_PATH;

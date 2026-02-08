@@ -9,7 +9,7 @@
 </head>
 
 <body>
-    <h1>ホームページへようこそ</h1>
+    <h1>ホームページへようこそ</h1><?php var_dump($_SESSION); ?>
     <p>
         <a href="<?php echo route('/user'); ?>" class="default-button profile-button">プロフィール</a>
         <a href="<?php echo route('/'); ?>" class="default-button logout-button">ログアウト</a>
