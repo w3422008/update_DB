@@ -4,14 +4,16 @@
  * DB接続情報を一元管理するクラス
  * - DB接続情報は config.php から取得
  */
-class CommonRepository {
+class CommonRepository
+{
     /**
      * DB接続を取得
      * config.php からDB情報を取得し、PDOインスタンスを返す
      * @return PDO
      * @throws PDOException
      */
-    public static function getDbConnection(): PDO {
+    public static function getDbConnection(): PDO
+    {
         // database.php から DB接続情報を取得
         $config = require __DIR__ . '/../../config/database.php';
         $dbConfig = $config['db'];

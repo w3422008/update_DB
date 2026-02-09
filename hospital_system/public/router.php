@@ -11,7 +11,7 @@ $app = new AppCore(false);
 // ベースパスを定義（config.php の BASE_PATH を使用）
 $basePath = BASE_PATH;
 
-// URIを取得し、ベースパスを除去
+// URLを取得し、ベースパスを除去
 $request = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $request = urldecode(rtrim($request));
 
@@ -23,10 +23,17 @@ if (strpos($request, $basePath) === 0) {
 // router.phpへの直接アクセスを除去
 $request = str_replace('/router.php', '', $request);
 
+// ルートの正規化
 $request = rtrim($request, '/');
 if ($request === '') {
     $request = '/';
 }
+
+// ルートに対応するコントローラーとメソッドを取得
+// $routes:web.php の対応するエントリ
+// $request:現在のリクエストパス
+// 例：$request = '/'
+// 　　→ $routes[$request] = ['controller' => 'LoginController', 'method' => 'login', 'title' => 'ログイン']
 
 $route = $routes[$request] ?? null;
 

@@ -1,12 +1,21 @@
 <?php
-require_once __DIR__ . '/../Models/User.php';
+require_once __DIR__ . '/../Models/UserManager.php';
 
-class UserService {
-    public function getUserData($id) {
-        $user = new User();
-        $user->id = $id;
-        $user->name = "山田 太郎";
-        $user->email = "taro@example.com";
-        return $user;
+class UserService
+{
+
+    private $UserManager;
+
+    public function __construct()
+    {
+        $this->UserManager = new UserManager();
+    }
+
+    public function getUserData()
+    {
+        // ユーザー情報を取得
+        $user_data = $this->UserManager->getUserData();
+
+        return $user_data;
     }
 }
